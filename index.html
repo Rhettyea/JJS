@@ -3,428 +3,551 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JJS 2D Showcase - Black Flash Edition</title>
+    <title>JJS Ultimate Sandbox 2D</title>
     <style>
         body {
             margin: 0;
-            background-color: #111;
+            background-color: #0b0b0f;
             color: #fff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
             overflow: hidden;
+            user-select: none;
         }
-        #ui-layer {
+        #ui-container {
             position: absolute;
-            top: 20px;
+            top: 15px;
+            width: 950px;
             display: flex;
-            gap: 50px;
+            justify-content: space-between;
             pointer-events: none;
         }
-        .hud {
-            background: rgba(0,0,0,0.6);
-            padding: 10px 20px;
-            border-radius: 5px;
-            border: 1px solid #333;
+        .hud-panel {
+            background: rgba(15, 15, 25, 0.85);
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 2px solid #2a2a3a;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            pointer-events: auto;
         }
-        .bar {
-            width: 200px;
-            height: 15px;
-            background: #222;
-            border: 1px solid #555;
+        .bar-bg {
+            width: 220px;
+            height: 16px;
+            background: #151520;
+            border: 1px solid #444;
+            border-radius: 4px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        .hp-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #d32f2f, #f44336); transition: width 0.1s; }
+        .ce-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #7b1fa2, #9c27b0); transition: width 0.1s; }
+        
+        #shop-btn, #char-btn {
+            background: #3f51b5;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
             margin-top: 5px;
         }
-        .health-fill { width: 100%; height: 100%; background: #e74c3c; transition: width 0.1s; }
-        .awaken-fill { width: 0%; height: 100%; background: #9b59b6; transition: width 0.1s; }
-        canvas {
-            border: 2px solid #444;
-            background-color: #1a1a1a;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        #shop-btn:hover, #char-btn:hover { background: #5c6bc0; }
+
+        /* Menu Overlays */
+        .modal {
+            display: none;
+            position: absolute;
+            background: rgba(10,10,20,0.95);
+            border: 3px solid #3f51b5;
+            border-radius: 12px;
+            padding: 20px;
+            z-index: 10;
+            box-shadow: 0 0 25px rgba(63, 81, 181, 0.5);
         }
-        #controls-hint {
-            margin-top: 15px;
-            color: #aaa;
+        .grid { display: grid; grid-template-columns: repeat(2, 160px); gap: 15px; margin-top: 15px; }
+        .grid-btn {
+            background: #222538;
+            border: 1px solid #444;
+            color: white;
+            padding: 15px;
+            border-radius: 6px;
+            cursor: pointer;
             text-align: center;
-            font-size: 14px;
-        }
-        .flash-text {
-            color: #ff0055;
             font-weight: bold;
-            text-shadow: 0 0 10px #000;
         }
+        .grid-btn:hover { background: #303450; border-color: #3f51b5; }
+        .close-btn {
+            background: #e53935;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            float: right;
+        }
+
+        canvas {
+            border: 3px solid #222538;
+            border-radius: 6px;
+            background: linear-gradient(to bottom, #141424, #0c0c14);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        }
+        #controls-legend {
+            margin-top: 12px;
+            color: #8a8a9e;
+            font-size: 13px;
+            text-align: center;
+            line-height: 1.5;
+        }
+        .highlight { color: #00e5ff; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div id="ui-layer">
-        <div class="hud" id="p1-hud">
-            <div><strong>VESSEL (Yuji)</strong> <span id="p1-state">IDLE</span></div>
-            <div class="bar"><div id="p1-health" class="health-fill"></div></div>
-            <div class="bar"><div id="p1-awaken" class="awaken-fill"></div></div>
+    <div id="ui-container">
+        <div class="hud-panel" id="player-hud">
+            <div><strong id="char-display">CHARACTER: Yuji Itadori</strong></div>
+            <div class="bar-bg"><div id="hp-bar" class="hp-fill"></div></div>
+            <div class="bar-bg"><div id="ce-bar" class="ce-fill"></div></div>
+            <div style="margin-top:8px;">💰 Coins: <span id="coin-count" style="color:#ffd700;font-weight:bold;">0</span></div>
+            <button id="char-btn" onclick="toggleModal('char-modal')">Swap Character</button>
+            <button id="shop-btn" onclick="toggleModal('shop-modal')">Cursed Arsenal</button>
         </div>
-        <div class="hud" id="p2-hud">
-            <div><strong>HONORED ONE (Gojo Dummy)</strong></div>
-            <div class="bar"><div id="p2-health" class="health-fill"></div></div>
+
+        <div class="hud-panel" style="text-align: right;">
+            <div><strong>Training Target Dummy</strong></div>
+            <div class="bar-bg" style="margin-left: auto;"><div id="enemy-hp-bar" class="hp-fill"></div></div>
+            <div style="margin-top: 5px; font-size:12px; color:#aaa;">Weapon Active: <span id="weapon-display" style="color:#00ffcc;">None</span></div>
         </div>
     </div>
 
-    <canvas id="gameCanvas" width="900" height="450"></canvas>
+    <div id="char-modal" class="modal">
+        <button class="close-btn" onclick="toggleModal('char-modal')">X</button>
+        <h3>Select Sorcerer / Curse</h3>
+        <div class="grid">
+            <div class="grid-btn" onclick="selectCharacter('yuji')">Yuji Itadori<br><span style="font-size:10px;color:#aaa;">Divergent / Black Flash</span></div>
+            <div class="grid-btn" onclick="selectCharacter('gojo')">Gojo Satoru<br><span style="font-size:10px;color:#aaa;">Lapse Blue / Reversal Red</span></div>
+            <div class="grid-btn" onclick="selectCharacter('megumi')">Megumi Fushiguro<br><span style="font-size:10px;color:#aaa;">Divine Dog Shadow Attack</span></div>
+            <div class="grid-btn" onclick="selectCharacter('sukuna')">Ryomen Sukuna<br><span style="font-size:10px;color:#aaa;">Dismantle / Cleave Surge</span></div>
+        </div>
+    </div>
 
-    <div id="controls-hint">
-        <strong>[1]</strong> M1 Basic Attack Combo | 
-        <strong>[3]</strong> Divergent Fist <span class="flash-text">(Press [3] AGAIN right when arm pulls all the way back for BLACK FLASH!)</span><br>
-        <strong>[G]</strong> Awakening (100% Spark) | 
-        <strong>[R]</strong> Reset Dummy Position
+    <div id="shop-modal" class="modal">
+        <button class="close-btn" onclick="toggleModal('shop-modal')">X</button>
+        <h3>Cursed Tool Arsenal Store</h3>
+        <div class="grid">
+            <div class="grid-btn" onclick="buyWeapon('Slaughter_Demon', 50)">Slaughter Demon<br><span style="color:#ffd700;">50 Coins</span></div>
+            <div class="grid-btn" onclick="buyWeapon('Playful_Cloud', 150)">Playful Cloud Staff<br><span style="color:#ffd700;">150 Coins</span></div>
+            <div class="grid-btn" onclick="buyWeapon('Inverted_Spear', 300)">Inverted Spear of Heaven<br><span style="color:#ffd700;">300 Coins</span></div>
+            <div class="grid-btn" onclick="buyWeapon('Dragon_Bone', 500)">Dragon Bone Sword<br><span style="color:#ffd700;">500 Coins</span></div>
+        </div>
+    </div>
+
+    <canvas id="jjsCanvas" width="1000" height="500"></canvas>
+
+    <div id="controls-legend">
+        Move: <span class="highlight">A / D</span> | Jump: <span class="highlight">W</span> | Dash / Evade: <span class="highlight">SHIFT</span> | Wall Run: <span class="highlight">Hold A/D against structure walls</span><br>
+        Basic M1 Melee Strike Combo: <span class="highlight">Left Click Mouse</span> | Character Unique Cursed Ability: <span class="highlight">Q Key</span><br>
+        Destroy buildings for coins. Dynamic structural restoration auto-triggers every 25 seconds.
     </div>
 
 <script>
-const canvas = document.getElementById('gameCanvas');
+const canvas = document.getElementById('jjsCanvas');
 const ctx = canvas.getContext('2d');
 
-// Game State Constants
-const GRAVITY = 0.6;
-const FLOOR_Y = 380;
+// Global Configurations
+const GRAVITY = 0.5;
+const FLOOR_LEVEL = 440;
+let cameraX = 0;
+let screenShake = 0;
+let coins = 100; // Starting allowance to try items
+let inventory = [];
+let equippedWeapon = 'None';
 
-class Character {
+// Game Database & States
+const CHARACTERS = {
+    yuji: { name: "Yuji Itadori", color: "#e67e22", maxHp: 100, moveName: "Divergent Fist", dmg: 15 },
+    gojo: { name: "Gojo Satoru", color: "#74b9ff", maxHp: 120, moveName: "Lapse Blue Pull", dmg: 18 },
+    megumi: { name: "Megumi Fushiguro", color: "#2d3436", maxHp: 95, moveName: "Shadow Frog Strike", dmg: 14 },
+    sukuna: { name: "Ryomen Sukuna", color: "#d63031", maxHp: 150, moveName: "Dismantle Wave", dmg: 22 }
+};
+let currentPreset = 'yuji';
+
+// Object Vectors
+class Actor {
     constructor(x, y, color, isDummy = false) {
-        this.x = x;
-        this.y = y;
-        this.vx = 0;
-        this.vy = 0;
-        this.width = 40;
-        this.height = 70;
+        this.x = x; this.y = y;
+        this.vx = 0; this.vy = 0;
+        this.width = 32; this.height = 64;
         this.color = color;
         this.isDummy = isDummy;
-        
-        // Stats
-        this.maxHealth = 100;
         this.health = 100;
-        this.awakening = 0;
-        this.isAwakened = false;
-        
-        // Combat Combat States
-        this.state = 'idle'; // idle, attacking, windup, hitstun, knockedout
-        this.direction = isDummy ? -1 : 1; // 1 = right, -1 = left
-        this.comboStep = 0;
-        this.lastM1Time = 0;
+        this.maxHealth = 100;
+        this.energy = 0;
+        this.direction = 1; // 1: Right, -1: Left
+        this.state = 'idle'; // idle, hitstun, attacking
         this.stateTimer = 0;
-        
-        // Move-specific windows
-        this.blackFlashWindowActive = false;
-        this.hasBlackFlashed = false;
+        this.isGrounded = false;
+        this.combo = 0;
     }
 
     update() {
-        // Apply Gravity
-        if (this.y + this.height < FLOOR_Y) {
+        // Environment Physics Engine
+        if (!this.isGrounded) {
             this.vy += GRAVITY;
-        } else {
-            this.vy = 0;
-            this.y = FLOOR_Y - this.height;
-            if (this.state === 'hitstun' && Math.abs(this.vx) < 1) {
-                this.state = 'idle';
-            }
         }
 
-        // Apply Friction/Drag
-        this.vx *= 0.85;
+        this.vx *= 0.82; // Air/Ground Drag Coefficient
         this.x += this.vx;
         this.y += this.vy;
+        this.isGrounded = false;
 
-        // Keep inside canvas bounds
+        // Map Boundary Hardlocking
+        if (this.y + this.height >= FLOOR_LEVEL) {
+            this.y = FLOOR_LEVEL - this.height;
+            this.vy = 0;
+            this.isGrounded = true;
+        }
         if (this.x < 0) this.x = 0;
-        if (this.x > canvas.width - this.width) this.x = canvas.width - this.width;
+        if (this.x > 2000) this.x = 2000; // Expanded Map Bounds
 
-        // Process State timers
+        // Structural Dynamic Collision Framework (Map Destruction integration)
+        buildings.forEach(bld => {
+            bld.blocks.forEach(blk => {
+                if (!blk.destroyed) {
+                    // Check intersection
+                    if (this.x < blk.x + blk.w && this.x + this.width > blk.x &&
+                        this.y < blk.y + blk.h && this.y + this.height > blk.y) {
+                        
+                        // Resolve vertical collisions
+                        let overlapX = Math.min(this.x + this.width, blk.x + blk.w) - Math.max(this.x, blk.x);
+                        let overlapY = Math.min(this.y + this.height, blk.y + blk.h) - Math.max(this.y, blk.y);
+
+                        if (overlapX > overlapY) {
+                            if (this.vy > 0 && this.y + this.height - this.vy <= blk.y + 4) { // Landing top
+                                this.y = blk.y - this.height;
+                                this.vy = 0;
+                                this.isGrounded = true;
+                            } else if (this.vy < 0) { // Hitting roof ceilings
+                                this.y = blk.y + blk.h;
+                                this.vy = 0;
+                            }
+                        } else {
+                            // Wall interaction physics for Parkour actions
+                            if (this.vx > 1 || this.vx < -1) {
+                                if (keys['w'] || keys['W']) { // Wall jump climb mechanics upward push trigger
+                                    this.vy = -5.5;
+                                    createSparks(this.x + this.width/2, this.y + this.height, '#fff', 2);
+                                }
+                            }
+                            if (this.x < blk.x) this.x = blk.x - this.width;
+                            else this.x = blk.x + blk.w;
+                        }
+                    }
+                }
+            });
+        });
+
+        // Decay structural timers
         if (this.stateTimer > 0) {
             this.stateTimer--;
-            if (this.stateTimer === 0) {
-                if (this.state === 'windup' && this.pendingMove) {
-                    this.executeMove(this.pendingMove);
-                } else if (this.state !== 'knockedout') {
-                    this.state = 'idle';
-                    this.blackFlashWindowActive = false;
-                }
-            }
+            if (this.stateTimer === 0) this.state = 'idle';
         }
     }
 
-    takeDamage(amount, knockbackX, knockbackY) {
-        this.health = Math.max(0, this.health - amount);
+    damage(amt, kx, ky) {
+        this.health = Math.max(0, this.health - amt);
+        this.vx = kx; this.vy = ky;
         this.state = 'hitstun';
-        this.stateTimer = 30; // 30 frames of hitstun
-        this.vx = knockbackX;
-        this.vy = knockbackY;
-        
-        // Gain awakening when taking damage (JJS passive mechanic)
+        this.stateTimer = 25;
         if (!this.isDummy) {
-            this.awakening = Math.min(100, this.awakening + amount * 0.5);
+            this.energy = Math.min(100, this.energy + amt * 0.6);
         }
     }
 
-    performM1() {
-        if (this.state !== 'idle' && this.state !== 'attacking') return;
-
-        let now = Date.now();
-        if (now - this.lastM1Time > 1000) this.comboStep = 0; // Reset combo if delayed
-
+    attackM1() {
+        if (this.state !== 'idle') return;
         this.state = 'attacking';
-        this.stateTimer = 15;
-        this.lastM1Time = now;
+        this.stateTimer = 14;
         
-        // Setup hitbox calculations based on combo step
-        let damage = 5;
-        let kX = this.direction * 5;
-        let kY = -2;
+        let range = 55;
+        let baseDmg = CHARACTERS[currentPreset].dmg;
+
+        // Calculate Weapon Attribute bonuses
+        if (equippedWeapon === 'Slaughter_Demon') baseDmg += 5;
+        if (equippedWeapon === 'Playful_Cloud') { baseDmg += 12; range = 75; }
+        if (equippedWeapon === 'Inverted_Spear') { baseDmg += 18; }
+        if (equippedWeapon === 'Dragon_Bone') { baseDmg += 25; range = 90; }
+
+        let hX = this.direction === 1 ? this.x + this.width : this.x - range;
+        let hitSomething = checkHitboxIntersection(hX, this.y + 10, range, 45, baseDmg, this.direction * 12, -4);
         
-        if (this.comboStep === 3) { // 4th hit finisher
-            damage = 12;
-            kX = this.direction * 18;
-            kY = -6;
-            this.comboStep = 0;
-            createImpactParticle((this.x + this.width/2) + (this.direction * 40), this.y + 20, '#ffcc00', 15);
-        } else {
-            this.comboStep++;
-            createImpactParticle((this.x + this.width/2) + (this.direction * 30), this.y + 30, '#fff', 5);
+        if (hitSomething) {
+            coins += 5;
+            createSparks(hX + range/2, this.y + 25, '#ffd700', 6);
         }
-
-        this.checkHitbox(45, 50, damage, kX, kY);
+        
+        // Execute structural environment damage parsing triggers
+        smashBuildingsAt(hX + range/2, this.y + 30, range);
     }
 
-    initiateDivergentFist() {
-        if (this.state !== 'idle') {
-            // IF ALREADY IN WINDUP: Check for Black Flash Exact Input frame rules
-            if (this.state === 'windup' && this.blackFlashWindowActive && !this.hasBlackFlashed) {
-                this.triggerBlackFlashSuccess();
-            }
-            return;
-        }
-
-        this.state = 'windup';
-        this.stateTimer = 25; // 25 frames window setup
-        this.pendingMove = 'divergent_fist';
-        this.hasBlackFlashed = false;
-
-        // JJS Mechanical frame perfect rule: Black Flash window triggers near the absolute peak tail of the windup
-        setTimeout(() => {
-            if (this.state === 'windup' && this.pendingMove === 'divergent_fist') {
-                this.blackFlashWindowActive = true;
-                // Visual cue: Spark indicator lines up with game UI
-                createImpactParticle(this.x + (this.direction * 10) + this.width/2, this.y + 20, 'rgba(255,255,255,0.8)', 8);
-            }
-        }, 250); // roughly 15 frames deep into execution
-    }
-
-    triggerBlackFlashSuccess() {
-        this.hasBlackFlashed = true;
-        this.pendingMove = 'black_flash';
-        // Force fast execution override
-        this.stateTimer = 2; 
-    }
-
-    executeMove(moveType) {
+    executeSpecialAbility() {
+        if (this.energy < 30) return;
+        this.energy -= 30;
         this.state = 'attacking';
-        this.stateTimer = 20;
+        this.stateTimer = 30;
 
-        if (moveType === 'divergent_fist') {
-            // Normal execution
-            this.checkHitbox(60, 60, 14, this.direction * 10, -3);
-            createImpactParticle(this.x + (this.direction * 40), this.y + 20, '#00bcff', 12);
-            // Double impact delays
-            setTimeout(() => {
-                this.checkHitbox(65, 60, 6, this.direction * 14, -2);
-            }, 150);
+        screenShake = 12;
+        let dir = this.direction;
+
+        if (currentPreset === 'yuji') { // Divergent Black Flash Link setup
+            checkHitboxIntersection(this.x + (dir * 40), this.y, 90, 60, 35, dir * 25, -8);
+            createSparks(this.x + (dir * 60), this.y + 30, '#ff0044', 35);
         } 
-        else if (moveType === 'black_flash') {
-            // Black Flash Spatial Mechanics: Critical Amp 2.5 Multiplier, Crimson Particle explosions
-            let targetHit = this.checkHitbox(80, 70, 35, this.direction * 32, -10);
-            
-            // Screen Shake trigger dynamic
-            screenShake = 20;
-            
-            // Generate distinct Black lightning particles
-            for(let i=0; i<30; i++) {
-                particles.push(new Particle(
-                    this.x + (this.direction * 50) + (Math.random()*40 - 20),
-                    this.y + 20 + (Math.random()*40 - 20),
-                    Math.random() * 6 - 3 + (this.direction * 8),
-                    Math.random() * 8 - 4,
-                    `rgb(${Math.random() > 0.3 ? '255,0,50' : '0,0,0'})`,
-                    Math.random() * 25 + 15
-                ));
-            }
-            
-            if (this.awakening < 100) {
-                this.awakening = Math.min(100, this.awakening + 35); // Landing BF massive boost to zone bar
-            }
-        }
-        this.blackFlashWindowActive = false;
-    }
-
-    checkHitbox(w, h, dmg, kx, ky) {
-        let hx = this.direction === 1 ? this.x + this.width : this.x - w;
-        let hy = this.y + 10;
-
-        // Collision Check with Opponent
-        let opponent = this.isDummy ? player : dummy;
-        if (hx < opponent.x + opponent.width &&
-            hx + w > opponent.x &&
-            hy < opponent.y + opponent.height &&
-            hy + h > opponent.y) {
-                opponent.takeDamage(dmg, kx, ky);
-                return true;
-        }
-        return false;
-    }
-
-    draw() {
-        ctx.fillStyle = this.color;
-        
-        // Render base character frame layout
-        if (this.state === 'hitstun') ctx.fillStyle = '#7f8c8d';
-        ctx.fillRect(this.x, this.y, this.width, this.height);
-
-        // Visual State indicators for testing positioning mechanics
-        ctx.fillStyle = '#fff';
-        if (this.direction === 1) {
-            ctx.fillRect(this.x + this.width - 8, this.y + 15, 8, 8); // Facing Eye indicator
-        } else {
-            ctx.fillRect(this.x, this.y + 15, 8, 8);
-        }
-
-        // Active State Render overlays
-        if (this.blackFlashWindowActive) {
-            ctx.strokeStyle = '#ff003c';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(this.x - 5, this.y - 5, this.width + 10, this.height + 10);
+        else if (currentPreset === 'gojo') { // Blue Attraction vortex pulse
+            dummy.x = this.x + (dir * 60);
+            dummy.damage(20, dir * 2, -2);
+            createSparks(this.x + (dir * 60), this.y + 30, '#00a2ff', 25);
+        } 
+        else if (currentPreset === 'megumi') { // Direct long distance tracking strike
+            checkHitboxIntersection(this.x + (dir * 120), this.y, 80, 60, 25, dir * 5, -12);
+            createSparks(this.x + (dir * 120), this.y + 30, '#2c3e50', 20);
+        } 
+        else if (currentPreset === 'sukuna') { // Screen slicing project beam line
+            checkHitboxIntersection(this.x + (dir * 50), this.y - 10, 250, 80, 40, dir * 30, -5);
+            createSparks(this.x + (dir * 150), this.y + 20, '#ff3333', 40);
+            smashBuildingsAt(this.x + (dir * 150), this.y + 20, 200);
         }
     }
 }
 
-// Particle Engine Array Structs
-class Particle {
-    constructor(x, y, vx, vy, color, life) {
-        this.x = x;
-        this.y = y;
-        this.vx = vx;
-        this.vy = vy;
-        this.color = color;
-        this.maxLife = life;
-        this.life = life;
-    }
-    update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.life--;
+// Building Environment Block Destruction Structs
+class Building {
+    constructor(startX, width, floors) {
+        this.blocks = [];
+        let blockW = 50;
+        let blockH = 40;
+        for (let f = 0; f < floors; f++) {
+            for (let w = 0; w < width; w++) {
+                this.blocks.push({
+                    x: startX + (w * blockW),
+                    y: FLOOR_LEVEL - ((f + 1) * blockH),
+                    w: blockW,
+                    h: blockH,
+                    destroyed: false,
+                    hp: 20
+                });
+            }
+        }
     }
     draw() {
+        this.blocks.forEach(b => {
+            if (!b.destroyed) {
+                ctx.fillStyle = '#2c3e50';
+                ctx.fillRect(b.x - cameraX, b.y, b.w - 2, b.h - 2);
+                ctx.strokeStyle = '#4b6584';
+                ctx.strokeRect(b.x - cameraX, b.y, b.w - 2, b.h - 2);
+                
+                // Window designs inside structural layers
+                ctx.fillStyle = '#f1c40f';
+                ctx.fillRect(b.x + 12 - cameraX, b.y + 10, 8, 12);
+                ctx.fillRect(b.x + 28 - cameraX, b.y + 10, 8, 12);
+            }
+        });
+    }
+}
+
+class Particle {
+    constructor(x, y, vx, vy, color, duration) {
+        this.x = x; this.y = y; this.vx = vx; this.vy = vy;
+        this.color = color; this.life = duration; this.maxLife = duration;
+    }
+    update() { this.x += this.vx; this.y += this.vy; this.life--; }
+    draw() {
         ctx.fillStyle = this.color;
-        let alpha = this.life / this.maxLife;
-        ctx.globalAlpha = alpha;
-        ctx.fillRect(this.x, this.y, Math.max(2, 6 * alpha), Math.max(2, 6 * alpha));
+        ctx.globalAlpha = this.life / this.maxLife;
+        ctx.fillRect(this.x - cameraX, this.y, 5, 5);
         ctx.globalAlpha = 1.0;
     }
 }
 
-// Initialize Instantiations
-const player = new Character(150, FLOOR_Y - 70, '#e67e22');
-const dummy = new Character(650, FLOOR_Y - 70, '#2c3e50', true);
+// Global System Instantiations Instantiation Layer
+const player = new Actor(100, FLOOR_LEVEL - 70, '#e67e22');
+const dummy = new Actor(750, FLOOR_LEVEL - 70, '#57606f', true);
+let buildings = [];
 let particles = [];
-let screenShake = 0;
+const keys = {};
 
-function createImpactParticle(x, y, color, count) {
-    for (let i = 0; i < count; i++) {
-        particles.push(new Particle(
-            x, y, 
-            (Math.random() - 0.5) * 10, 
-            (Math.random() - 0.5) * 10, 
-            color, 
-            Math.random() * 20 + 10
-        ));
+function initMapEnvironment() {
+    buildings = [];
+    buildings.push(new Building(350, 3, 5));
+    buildings.push(new Building(600, 2, 7));
+    buildings.push(new Building(1100, 4, 4));
+    buildings.push(new Building(1450, 3, 6));
+}
+
+function createSparks(x, y, color, count) {
+    for(let i=0; i<count; i++) {
+        particles.push(new Particle(x, y, (Math.random()-0.5)*12, (Math.random()-0.5)*12, color, Math.random()*25 + 15));
     }
 }
 
-// Global Key Listeners Map Binding Framework
-window.addEventListener('keydown', (e) => {
-    if (player.state === 'hitstun') return;
-    
-    switch(e.key.toLowerCase()) {
-        case '1':
-            player.performM1();
-            break;
-        case '3':
-            player.initiateDivergentFist();
-            break;
-        case 'g':
-            if (player.awakening >= 100) {
-                player.isAwakened = true;
-                player.color = '#8e44ad'; // Purple variant palette shift
-                createImpactParticle(player.x + 20, player.y + 35, '#9b59b6', 40);
-                screenShake = 15;
+function smashBuildingsAt(targetX, targetY, radius) {
+    buildings.forEach(bld => {
+        bld.blocks.forEach(b => {
+            if (!b.destroyed) {
+                let distX = b.x + b.w/2 - targetX;
+                let distY = b.y + b.h/2 - targetY;
+                if (Math.sqrt(distX*distX + distY*distY) < radius) {
+                    b.hp -= 15;
+                    if (b.hp <= 0) {
+                        b.destroyed = true;
+                        coins += 15; // Building destruction economic yields
+                        createSparks(b.x + b.w/2, b.y + b.h/2, '#7f8c8d', 10);
+                    }
+                }
             }
-            break;
-        case 'r': // Debug repositioning utilities map
-            dummy.x = 650;
-            dummy.y = FLOOR_Y - 70;
-            dummy.health = 100;
-            dummy.state = 'idle';
-            break;
+        });
+    });
+}
+
+function checkHitboxIntersection(hx, hy, hw, hh, dmg, kx, ky) {
+    let target = dummy; // Sandbox training focal mapping targets
+    if (hx < target.x + target.width && hx + hw > target.x &&
+        hy < target.y + target.height && hy + hh > target.y) {
+        target.damage(dmg, kx, ky);
+        return true;
+    }
+    return false;
+}
+
+// User Action Interaction UI Bindings
+function toggleModal(id) {
+    let el = document.getElementById(id);
+    el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+}
+
+function selectCharacter(key) {
+    currentPreset = key;
+    player.color = CHARACTERS[key].color;
+    player.maxHealth = CHARACTERS[key].maxHp;
+    player.health = player.maxHealth;
+    document.getElementById('char-display').innerText = "CHARACTER: " + CHARACTERS[key].name;
+    toggleModal('char-modal');
+    createSparks(player.x, player.y + 20, player.color, 25);
+}
+
+function buyWeapon(name, cost) {
+    if (coins >= cost && !inventory.includes(name)) {
+        coins -= cost;
+        inventory.push(name);
+        equippedWeapon = name;
+        document.getElementById('weapon-display').innerText = name.replace('_', ' ');
+        toggleModal('shop-modal');
+        alert("Equipped: " + name.replace('_', ' '));
+    } else if (inventory.includes(name)) {
+        equippedWeapon = name;
+        document.getElementById('weapon-display').innerText = name.replace('_', ' ');
+        toggleModal('shop-modal');
+    } else {
+        alert("Insufficient Coins!");
+    }
+}
+
+// Input Listener Interceptors Mapping
+window.addEventListener('keydown', e => { 
+    keys[e.key] = true; 
+    if (e.key.toLowerCase() === 'q') player.executeSpecialAbility();
+    if (e.key === 'Shift') { // Instantaneous Translation Dash Matrix
+        player.vx = player.direction * 18;
+        createSparks(player.x, player.y + 30, 'rgba(255,255,255,0.4)', 5);
     }
 });
+window.addEventListener('keyup', e => { keys[e.key] = false; });
+canvas.addEventListener('mousedown', () => { player.attackM1(); });
 
-// Engine Frame Cycle System Loop
-function gameLoop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+// Auto Map Generation Loops Refresh
+setInterval(initMapEnvironment, 25000);
 
-    // Apply Cinematic Screen Shake Dynamics Matrix
-    ctx.save();
-    if (screenShake > 0) {
-        let dx = (Math.random() - 0.5) * screenShake;
-        let dy = (Math.random() - 0.5) * screenShake;
-        ctx.translate(dx, dy);
-        screenShake *= 0.9;
-        if (screenShake < 0.5) screenShake = 0;
+// Continuous Core System Execution Frame Loop
+function renderLoop() {
+    // Process input operations transformations
+    if (player.state === 'idle') {
+        if (keys['a'] || keys['A']) { player.vx = -5; player.direction = -1; }
+        if (keys['d'] || keys['D']) { player.vx = 5; player.direction = 1; }
+        if ((keys['w'] || keys['W']) && player.isGrounded) { player.vy = -12; player.isGrounded = false; }
     }
 
-    // Render Stage Environment Floor Layout
-    ctx.fillStyle = '#2c3e50';
-    ctx.fillRect(0, FLOOR_Y, canvas.width, canvas.height - FLOOR_Y);
-    ctx.fillStyle = '#27ae60';
-    ctx.fillRect(0, FLOOR_Y, canvas.width, 5); // Green platform trim bounds
-
-    // Update Actors
+    // Execution system entity updates
     player.update();
     dummy.update();
 
-    // Enforce dynamic face positioning mapping tracking
-    if (player.state === 'idle') {
-        player.direction = (player.x < dummy.x) ? 1 : -1;
+    // Camera follow mechanics layout smoothing calculations
+    cameraX += (player.x - cameraX - canvas.width / 3) * 0.1;
+    cameraX = Math.max(0, Math.min(1100, cameraX)); // Limit camera boundaries
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    // Screen shaking engine matrix transform operations execution
+    if (screenShake > 0) {
+        ctx.translate((Math.random()-0.5)*screenShake, (Math.random()-0.5)*screenShake);
+        screenShake *= 0.88;
     }
 
-    // Process particles lifecycle routines
+    // Render Stage Base Ground Floor Limits
+    ctx.fillStyle = '#1e1e2f';
+    ctx.fillRect(0 - cameraX, FLOOR_LEVEL, 2200, canvas.height - FLOOR_LEVEL);
+    ctx.fillStyle = '#3f51b5';
+    ctx.fillRect(0 - cameraX, FLOOR_LEVEL, 2200, 6);
+
+    // Structural and object renders
+    buildings.forEach(b => b.draw());
+    
+    // Render Dummy Targets Frame Layouts
+    ctx.fillStyle = dummy.state === 'hitstun' ? '#ff7675' : dummy.color;
+    ctx.fillRect(dummy.x - cameraX, dummy.y, dummy.width, dummy.height);
+
+    // Render Main Active Controlled Player Entity Character Layout
+    ctx.fillStyle = player.state === 'hitstun' ? '#95a5a6' : player.color;
+    ctx.fillRect(player.x - cameraX, player.y, player.width, player.height);
+    
+    // Simple Weapon Indicator overlay render attachments onto actors frame structures
+    if (equippedWeapon !== 'None') {
+        ctx.fillStyle = '#00e5ff';
+        let wX = player.direction === 1 ? player.x + player.width - cameraX : player.x - 10 - cameraX;
+        ctx.fillRect(wX, player.y + 25, 10, 20);
+    }
+
+    // Handle and render structural particle loops
     particles = particles.filter(p => p.life > 0);
     particles.forEach(p => { p.update(); p.draw(); });
 
-    // Render Actors
-    player.draw();
-    dummy.draw();
-
     ctx.restore();
 
-    // Process UI DOM states feedback rendering
-    document.getElementById('p1-health').style.width = player.health + '%';
-    document.getElementById('p1-awaken').style.width = player.awakening + '%';
-    document.getElementById('p2-health').style.width = dummy.health + '%';
-    document.getElementById('p1-state').innerText = player.state.toUpperCase() + (player.blackFlashWindowActive ? " (BF WINDOW OPEN!)" : "");
+    // Fast-refresh Native HTML State Layer Updates interfaces
+    document.getElementById('hp-bar').style.width = (player.health / player.maxHealth)*100 + '%';
+    document.getElementById('ce-bar').style.width = player.energy + '%';
+    document.getElementById('enemy-hp-bar').style.width = dummy.health + '%';
+    document.getElementById('coin-count').innerText = coins;
 
-    requestAnimationFrame(gameLoop);
+    if (dummy.health <= 0) { // Automatic Dummy Respawn loop module standard
+        dummy.health = 100;
+        dummy.x = player.x + 400 * player.direction;
+        if (dummy.x > 1900 || dummy.x < 50) dummy.x = 500;
+    }
+
+    requestAnimationFrame(renderLoop);
 }
 
-// Boot Environment initialization sequence
-gameLoop();
+// Initial Boot Sequence Execution
+initMapEnvironment();
+renderLoop();
 </script>
 </body>
 </html>
