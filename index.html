@@ -3,137 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JJS Ultimate Sandbox 2D</title>
+    <title>JJS 2D: Shibuya Incident Sandbox</title>
     <style>
         body {
-            margin: 0;
-            background-color: #0b0b0f;
-            color: #fff;
+            margin: 0; background-color: #08080c; color: #fff;
             font-family: 'Segoe UI', Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden;
-            user-select: none;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; overflow: hidden; user-select: none;
         }
         #ui-container {
-            position: absolute;
-            top: 15px;
-            width: 950px;
-            display: flex;
-            justify-content: space-between;
-            pointer-events: none;
+            position: absolute; top: 15px; width: 950px;
+            display: flex; justify-content: space-between; pointer-events: none; z-index: 5;
         }
         .hud-panel {
-            background: rgba(15, 15, 25, 0.85);
-            padding: 12px 20px;
-            border-radius: 8px;
-            border: 2px solid #2a2a3a;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            pointer-events: auto;
+            background: rgba(10, 10, 20, 0.9); padding: 12px 20px;
+            border-radius: 8px; border: 2px solid #1f1f3a;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6); pointer-events: auto;
         }
-        .bar-bg {
-            width: 220px;
-            height: 16px;
-            background: #151520;
-            border: 1px solid #444;
-            border-radius: 4px;
-            margin-top: 6px;
-            overflow: hidden;
-        }
-        .hp-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #d32f2f, #f44336); transition: width 0.1s; }
-        .ce-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #7b1fa2, #9c27b0); transition: width 0.1s; }
+        .bar-bg { width: 220px; height: 14px; background: #111; border: 1px solid #444; border-radius: 4px; margin-top: 5px; overflow: hidden; }
+        .hp-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ca1c1c, #f44336); transition: width 0.05s; }
+        .ce-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #1080ff, #00e5ff); transition: width 0.05s; }
         
-        #shop-btn, #char-btn {
-            background: #3f51b5;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-top: 5px;
+        button {
+            background: #2f3542; color: white; border: 1px solid #57606f;
+            padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px;
         }
-        #shop-btn:hover, #char-btn:hover { background: #5c6bc0; }
+        button:hover { background: #57606f; }
 
-        /* Menu Overlays */
         .modal {
-            display: none;
-            position: absolute;
-            background: rgba(10,10,20,0.95);
-            border: 3px solid #3f51b5;
-            border-radius: 12px;
-            padding: 20px;
-            z-index: 10;
-            box-shadow: 0 0 25px rgba(63, 81, 181, 0.5);
+            display: none; position: absolute; background: rgba(5,5,12,0.98);
+            border: 2px solid #00e5ff; border-radius: 10px; padding: 20px; z-index: 10;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.3); max-height: 400px; overflow-y: auto;
         }
-        .grid { display: grid; grid-template-columns: repeat(2, 160px); gap: 15px; margin-top: 15px; }
+        .grid { display: grid; grid-template-columns: repeat(3, 150px); gap: 10px; margin-top: 10px; }
         .grid-btn {
-            background: #222538;
-            border: 1px solid #444;
-            color: white;
-            padding: 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            text-align: center;
-            font-weight: bold;
+            background: #111424; border: 1px solid #333; color: white; padding: 10px;
+            border-radius: 6px; cursor: pointer; text-align: center; font-size: 12px; font-weight: bold;
         }
-        .grid-btn:hover { background: #303450; border-color: #3f51b5; }
-        .close-btn {
-            background: #e53935;
-            border: none;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            float: right;
-        }
+        .grid-btn:hover { background: #1e2440; border-color: #00e5ff; }
+        .close-btn { background: #d63031; border: none; color: white; padding: 3px 8px; border-radius: 4px; cursor: pointer; float: right; }
 
         canvas {
-            border: 3px solid #222538;
-            border-radius: 6px;
-            background: linear-gradient(to bottom, #141424, #0c0c14);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            border: 2px solid #1f1f3a; border-radius: 4px;
+            background: #05050a; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
-        #controls-legend {
-            margin-top: 12px;
-            color: #8a8a9e;
-            font-size: 13px;
-            text-align: center;
-            line-height: 1.5;
+        #domain-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 2; display: none;
+            box-shadow: inset 0 0 100px rgba(0,0,0,1);
         }
-        .highlight { color: #00e5ff; font-weight: bold; }
+        #controls-legend { margin-top: 10px; color: #747d8c; font-size: 12px; text-align: center; line-height: 1.4; }
+        .hl { color: #00e5ff; font-weight: bold; }
     </style>
 </head>
 <body>
 
+    <div id="domain-overlay"></div>
+
     <div id="ui-container">
         <div class="hud-panel" id="player-hud">
-            <div><strong id="char-display">CHARACTER: Yuji Itadori</strong></div>
+            <div><strong id="char-display">CHARACTER: Mahito</strong></div>
             <div class="bar-bg"><div id="hp-bar" class="hp-fill"></div></div>
             <div class="bar-bg"><div id="ce-bar" class="ce-fill"></div></div>
-            <div style="margin-top:8px;">💰 Coins: <span id="coin-count" style="color:#ffd700;font-weight:bold;">0</span></div>
-            <button id="char-btn" onclick="toggleModal('char-modal')">Swap Character</button>
-            <button id="shop-btn" onclick="toggleModal('shop-modal')">Cursed Arsenal</button>
+            <div style="margin-top:5px; font-size:13px;">💰 Coins: <span id="coin-count" style="color:#ffd700;font-weight:bold;">100</span></div>
+            <button onclick="toggleModal('char-modal')">Roster Select</button>
+            <button onclick="toggleModal('shop-modal')">Arsenal Shop</button>
         </div>
 
         <div class="hud-panel" style="text-align: right;">
-            <div><strong>Training Target Dummy</strong></div>
-            <div class="bar-bg" style="margin-left: auto;"><div id="enemy-hp-bar" class="hp-fill"></div></div>
-            <div style="margin-top: 5px; font-size:12px; color:#aaa;">Weapon Active: <span id="weapon-display" style="color:#00ffcc;">None</span></div>
+            <div><strong>Shibuya Incident Targets</strong></div>
+            <div style="font-size:12px; color:#aaa; margin-top:5px;">Active Tool: <span id="weapon-display" style="color:#00ffcc;">None</span></div>
+            <div style="font-size:11px; color:#ff7675; margin-top:3px;" id="bf-status">BLACK FLASH WINDOW: CLOSED</div>
         </div>
     </div>
 
     <div id="char-modal" class="modal">
         <button class="close-btn" onclick="toggleModal('char-modal')">X</button>
-        <h3>Select Sorcerer / Curse</h3>
+        <h3>Choose Your Sorcerer / Curse</h3>
         <div class="grid">
-            <div class="grid-btn" onclick="selectCharacter('yuji')">Yuji Itadori<br><span style="font-size:10px;color:#aaa;">Divergent / Black Flash</span></div>
-            <div class="grid-btn" onclick="selectCharacter('gojo')">Gojo Satoru<br><span style="font-size:10px;color:#aaa;">Lapse Blue / Reversal Red</span></div>
-            <div class="grid-btn" onclick="selectCharacter('megumi')">Megumi Fushiguro<br><span style="font-size:10px;color:#aaa;">Divine Dog Shadow Attack</span></div>
-            <div class="grid-btn" onclick="selectCharacter('sukuna')">Ryomen Sukuna<br><span style="font-size:10px;color:#aaa;">Dismantle / Cleave Surge</span></div>
+            <div class="grid-btn" onclick="selectCharacter('mahito')">Mahito<br><span style="color:#9b59b6;font-size:9px;">DE: Self-Embodiment</span></div>
+            <div class="grid-btn" onclick="selectCharacter('naoya')">Naoya Zenin<br><span style="color:#f1c40f;font-size:9px;">ULT: Projection Sorcery</span></div>
+            <div class="grid-btn" onclick="selectCharacter('hakari')">Kinji Hakari<br><span style="color:#2ecc71;font-size:9px;">DE: Idle Death Gamble</span></div>
+            <div class="grid-btn" onclick="selectCharacter('choso')">Choso<br><span style="color:#e74c3c;font-size:9px;">ULT: Supernova Stream</span></div>
+            <div class="grid-btn" onclick="selectCharacter('todo')">Aaoi Todo<br><span style="color:#34495e;font-size:9px;">ULT: Boogie Woogie Swap</span></div>
+            <div class="grid-btn" onclick="selectCharacter('higuruma')">Hiromi Higuruma<br><span style="color:#95a5a6;font-size:9px;">DE: Deadly Sentencing</span></div>
+            <div class="grid-btn" onclick="selectCharacter('yuta')">Yuta Okkotsu<br><span style="color:#ecf0f1;font-size:9px;">DE: Authentic Mutual Love</span></div>
+            <div class="grid-btn" onclick="selectCharacter('nanami')">Kento Nanami<br><span style="color:#f39c12;font-size:9px;">ULT: 7:3 Ratio Collapse</span></div>
+            <div class="grid-btn" onclick="selectCharacter('mechamaru')">Mechamaru<br><span style="color:#7f8c8d;font-size:9px;">ULT: Albatross Cannon</span></div>
+            <div class="grid-btn" onclick="selectCharacter('hanami')">Hanami<br><span style="color:#27ae60;font-size:9px;">ULT: Feast of Blessings</span></div>
+            <div class="grid-btn" onclick="selectCharacter('locust')">Locust Guy<br><span style="color:#16a085;font-size:9px;">ULT: Hexapod Frenzy</span></div>
+            <div class="grid-btn" onclick="selectCharacter('yuki')">Yuki Tsukumo<br><span style="color:#e67e22;font-size:9px;">ULT: Star Rage Density</span></div>
+            <div class="grid-btn" onclick="selectCharacter('haruta')">Haruta Shigemo<br><span style="color:#e84393;font-size:9px;">ULT: Miracle Contingency</span></div>
+            <div class="grid-btn" onclick="selectCharacter('meimei')">Mei Mei<br><span style="color:#00a8ff;font-size:9px;">ULT: Bird Strike Kamikaze</span></div>
         </div>
     </div>
 
@@ -148,406 +109,69 @@
         </div>
     </div>
 
-    <canvas id="jjsCanvas" width="1000" height="500"></canvas>
+    <canvas id="shibuyaCanvas" width="1000" height="500"></canvas>
 
     <div id="controls-legend">
-        Move: <span class="highlight">A / D</span> | Jump: <span class="highlight">W</span> | Dash / Evade: <span class="highlight">SHIFT</span> | Wall Run: <span class="highlight">Hold A/D against structure walls</span><br>
-        Basic M1 Melee Strike Combo: <span class="highlight">Left Click Mouse</span> | Character Unique Cursed Ability: <span class="highlight">Q Key</span><br>
-        Destroy buildings for coins. Dynamic structural restoration auto-triggers every 25 seconds.
+        Move: <span class="hl">A / D</span> | Jump: <span class="hl">W</span> | Dash: <span class="hl">SHIFT</span> | Wall Run: <span class="hl">Hold A/D into structural walls while airborne</span><br>
+        Basic M1 Attack: <span class="hl">Left Click</span> | Skill 3 (Divergent Fist Setup): <span class="hl">3 Key</span> (Tap again on flash for <span class="hl" style="color:#ff3f34;">BLACK FLASH</span>)<br>
+        Unleash Domain Expansion / Ultimate Move (At 100% Spark Energy): <span class="hl">Q Key</span>
     </div>
 
 <script>
-const canvas = document.getElementById('jjsCanvas');
+const canvas = document.getElementById('shibuyaCanvas');
 const ctx = canvas.getContext('2d');
+const overlay = document.getElementById('domain-overlay');
 
-// Global Configurations
-const GRAVITY = 0.5;
-const FLOOR_LEVEL = 440;
+// Global Systems
+const GRAVITY = 0.55;
 let cameraX = 0;
 let screenShake = 0;
-let coins = 100; // Starting allowance to try items
+let coins = 100;
 let inventory = [];
 let equippedWeapon = 'None';
+let currentPreset = 'mahito';
+let domainActive = false;
+let domainColor = '';
 
-// Game Database & States
-const CHARACTERS = {
-    yuji: { name: "Yuji Itadori", color: "#e67e22", maxHp: 100, moveName: "Divergent Fist", dmg: 15 },
-    gojo: { name: "Gojo Satoru", color: "#74b9ff", maxHp: 120, moveName: "Lapse Blue Pull", dmg: 18 },
-    megumi: { name: "Megumi Fushiguro", color: "#2d3436", maxHp: 95, moveName: "Shadow Frog Strike", dmg: 14 },
-    sukuna: { name: "Ryomen Sukuna", color: "#d63031", maxHp: 150, moveName: "Dismantle Wave", dmg: 22 }
+// Roster Database Configuration
+const ROSTER = {
+    mahito: { name: "Mahito", color: "#8e44ad", isDomain: true, ultName: "Self-Embodiment of Perfection", dmg: 16 },
+    naoya: { name: "Naoya Zenin", color: "#f1c40f", isDomain: false, ultName: "Projection Sorcery Speed Blitz", dmg: 14 },
+    hakari: { name: "Kinji Hakari", color: "#2ecc71", isDomain: true, ultName: "Idle Death Gamble Jackpot", dmg: 15 },
+    choso: { name: "Choso", color: "#c0392b", isDomain: false, ultName: "Blood Manipulation: Supernova", dmg: 17 },
+    todo: { name: "Aoi Todo", color: "#34495e", isDomain: false, ultName: "Boogie Woogie Positional Swap", dmg: 13 },
+    higuruma: { name: "Hiromi Higuruma", color: "#7f8c8d", isDomain: true, ultName: "Deadly Sentencing Confiscation", dmg: 12 },
+    yuta: { name: "Yuta Okkotsu", color: "#dff9fb", isDomain: true, ultName: "Authentic Mutual Love: Rika Surge", dmg: 18 },
+    nanami: { name: "Kento Nanami", color: "#f39c12", isDomain: false, ultName: "7:3 Ratio Collapse Strike", dmg: 20 },
+    mechamaru: { name: "Mechamaru", color: "#95a5a6", isDomain: false, ultName: "Ultimate Cannon: Albatross Output", dmg: 19 },
+    hanami: { name: "Hanami", color: "#27ae60", isDomain: false, ultName: "Disaster Plant Roots Burst", dmg: 16 },
+    locust: { name: "Locust Guy", color: "#16a085", isDomain: false, ultName: "Hexapod Plaga Strike", dmg: 14 },
+    yuki: { name: "Yuki Tsukumo", color: "#e67e22", isDomain: false, ultName: "Star Rage Imaginary Density", dmg: 24 },
+    haruta: { name: "Haruta Shigemo", color: "#e84393", isDomain: false, ultName: "Miracle Slice Save Pass", dmg: 11 },
+    meimei: { name: "Mei Mei", color: "#00a8ff", isDomain: false, ultName: "Bird Strike Kamikaze Crash", dmg: 21 }
 };
-let currentPreset = 'yuji';
 
-// Object Vectors
+// Map Blueprint: Shibuya Station Hub
+const PLATFORMS = [
+    { x: 0, y: 450, w: 2500, h: 50, type: 'street' },        // Main Street Floor
+    { x: 300, y: 330, w: 400, h: 20, type: 'subway_deck' },  // Upper Station Overpass
+    { x: 850, y: 220, w: 350, h: 20, type: 'subway_deck' },  // Elevated Scaffold
+    { x: 1300, y: 310, w: 500, h: 20, type: 'stairwell' }   // Lower Mezzanine Platform
+];
+
 class Actor {
-    constructor(x, y, color, isDummy = false) {
-        this.x = x; this.y = y;
-        this.vx = 0; this.vy = 0;
-        this.width = 32; this.height = 64;
-        this.color = color;
-        this.isDummy = isDummy;
-        this.health = 100;
-        this.maxHealth = 100;
-        this.energy = 0;
-        this.direction = 1; // 1: Right, -1: Left
-        this.state = 'idle'; // idle, hitstun, attacking
-        this.stateTimer = 0;
-        this.isGrounded = false;
-        this.combo = 0;
+    constructor(x, y, color, isAi = false, charType = 'yuji') {
+        this.x = x; this.y = y; this.vx = 0; this.vy = 0;
+        this.width = 30; this.height = 60;
+        this.color = color; this.isAi = isAi; this.charType = charType;
+        this.health = 100; this.maxHealth = 100; this.energy = 20;
+        this.direction = 1; this.state = 'idle'; this.stateTimer = 0;
+        this.isGrounded = false; this.combo = 0;
+        
+        // Timing-based Black Flash mechanics variables
+        this.bfWindowActive = false;
+        this.hasBlackFlashed = false;
     }
 
     update() {
-        // Environment Physics Engine
-        if (!this.isGrounded) {
-            this.vy += GRAVITY;
-        }
-
-        this.vx *= 0.82; // Air/Ground Drag Coefficient
-        this.x += this.vx;
-        this.y += this.vy;
-        this.isGrounded = false;
-
-        // Map Boundary Hardlocking
-        if (this.y + this.height >= FLOOR_LEVEL) {
-            this.y = FLOOR_LEVEL - this.height;
-            this.vy = 0;
-            this.isGrounded = true;
-        }
-        if (this.x < 0) this.x = 0;
-        if (this.x > 2000) this.x = 2000; // Expanded Map Bounds
-
-        // Structural Dynamic Collision Framework (Map Destruction integration)
-        buildings.forEach(bld => {
-            bld.blocks.forEach(blk => {
-                if (!blk.destroyed) {
-                    // Check intersection
-                    if (this.x < blk.x + blk.w && this.x + this.width > blk.x &&
-                        this.y < blk.y + blk.h && this.y + this.height > blk.y) {
-                        
-                        // Resolve vertical collisions
-                        let overlapX = Math.min(this.x + this.width, blk.x + blk.w) - Math.max(this.x, blk.x);
-                        let overlapY = Math.min(this.y + this.height, blk.y + blk.h) - Math.max(this.y, blk.y);
-
-                        if (overlapX > overlapY) {
-                            if (this.vy > 0 && this.y + this.height - this.vy <= blk.y + 4) { // Landing top
-                                this.y = blk.y - this.height;
-                                this.vy = 0;
-                                this.isGrounded = true;
-                            } else if (this.vy < 0) { // Hitting roof ceilings
-                                this.y = blk.y + blk.h;
-                                this.vy = 0;
-                            }
-                        } else {
-                            // Wall interaction physics for Parkour actions
-                            if (this.vx > 1 || this.vx < -1) {
-                                if (keys['w'] || keys['W']) { // Wall jump climb mechanics upward push trigger
-                                    this.vy = -5.5;
-                                    createSparks(this.x + this.width/2, this.y + this.height, '#fff', 2);
-                                }
-                            }
-                            if (this.x < blk.x) this.x = blk.x - this.width;
-                            else this.x = blk.x + blk.w;
-                        }
-                    }
-                }
-            });
-        });
-
-        // Decay structural timers
-        if (this.stateTimer > 0) {
-            this.stateTimer--;
-            if (this.stateTimer === 0) this.state = 'idle';
-        }
-    }
-
-    damage(amt, kx, ky) {
-        this.health = Math.max(0, this.health - amt);
-        this.vx = kx; this.vy = ky;
-        this.state = 'hitstun';
-        this.stateTimer = 25;
-        if (!this.isDummy) {
-            this.energy = Math.min(100, this.energy + amt * 0.6);
-        }
-    }
-
-    attackM1() {
-        if (this.state !== 'idle') return;
-        this.state = 'attacking';
-        this.stateTimer = 14;
-        
-        let range = 55;
-        let baseDmg = CHARACTERS[currentPreset].dmg;
-
-        // Calculate Weapon Attribute bonuses
-        if (equippedWeapon === 'Slaughter_Demon') baseDmg += 5;
-        if (equippedWeapon === 'Playful_Cloud') { baseDmg += 12; range = 75; }
-        if (equippedWeapon === 'Inverted_Spear') { baseDmg += 18; }
-        if (equippedWeapon === 'Dragon_Bone') { baseDmg += 25; range = 90; }
-
-        let hX = this.direction === 1 ? this.x + this.width : this.x - range;
-        let hitSomething = checkHitboxIntersection(hX, this.y + 10, range, 45, baseDmg, this.direction * 12, -4);
-        
-        if (hitSomething) {
-            coins += 5;
-            createSparks(hX + range/2, this.y + 25, '#ffd700', 6);
-        }
-        
-        // Execute structural environment damage parsing triggers
-        smashBuildingsAt(hX + range/2, this.y + 30, range);
-    }
-
-    executeSpecialAbility() {
-        if (this.energy < 30) return;
-        this.energy -= 30;
-        this.state = 'attacking';
-        this.stateTimer = 30;
-
-        screenShake = 12;
-        let dir = this.direction;
-
-        if (currentPreset === 'yuji') { // Divergent Black Flash Link setup
-            checkHitboxIntersection(this.x + (dir * 40), this.y, 90, 60, 35, dir * 25, -8);
-            createSparks(this.x + (dir * 60), this.y + 30, '#ff0044', 35);
-        } 
-        else if (currentPreset === 'gojo') { // Blue Attraction vortex pulse
-            dummy.x = this.x + (dir * 60);
-            dummy.damage(20, dir * 2, -2);
-            createSparks(this.x + (dir * 60), this.y + 30, '#00a2ff', 25);
-        } 
-        else if (currentPreset === 'megumi') { // Direct long distance tracking strike
-            checkHitboxIntersection(this.x + (dir * 120), this.y, 80, 60, 25, dir * 5, -12);
-            createSparks(this.x + (dir * 120), this.y + 30, '#2c3e50', 20);
-        } 
-        else if (currentPreset === 'sukuna') { // Screen slicing project beam line
-            checkHitboxIntersection(this.x + (dir * 50), this.y - 10, 250, 80, 40, dir * 30, -5);
-            createSparks(this.x + (dir * 150), this.y + 20, '#ff3333', 40);
-            smashBuildingsAt(this.x + (dir * 150), this.y + 20, 200);
-        }
-    }
-}
-
-// Building Environment Block Destruction Structs
-class Building {
-    constructor(startX, width, floors) {
-        this.blocks = [];
-        let blockW = 50;
-        let blockH = 40;
-        for (let f = 0; f < floors; f++) {
-            for (let w = 0; w < width; w++) {
-                this.blocks.push({
-                    x: startX + (w * blockW),
-                    y: FLOOR_LEVEL - ((f + 1) * blockH),
-                    w: blockW,
-                    h: blockH,
-                    destroyed: false,
-                    hp: 20
-                });
-            }
-        }
-    }
-    draw() {
-        this.blocks.forEach(b => {
-            if (!b.destroyed) {
-                ctx.fillStyle = '#2c3e50';
-                ctx.fillRect(b.x - cameraX, b.y, b.w - 2, b.h - 2);
-                ctx.strokeStyle = '#4b6584';
-                ctx.strokeRect(b.x - cameraX, b.y, b.w - 2, b.h - 2);
-                
-                // Window designs inside structural layers
-                ctx.fillStyle = '#f1c40f';
-                ctx.fillRect(b.x + 12 - cameraX, b.y + 10, 8, 12);
-                ctx.fillRect(b.x + 28 - cameraX, b.y + 10, 8, 12);
-            }
-        });
-    }
-}
-
-class Particle {
-    constructor(x, y, vx, vy, color, duration) {
-        this.x = x; this.y = y; this.vx = vx; this.vy = vy;
-        this.color = color; this.life = duration; this.maxLife = duration;
-    }
-    update() { this.x += this.vx; this.y += this.vy; this.life--; }
-    draw() {
-        ctx.fillStyle = this.color;
-        ctx.globalAlpha = this.life / this.maxLife;
-        ctx.fillRect(this.x - cameraX, this.y, 5, 5);
-        ctx.globalAlpha = 1.0;
-    }
-}
-
-// Global System Instantiations Instantiation Layer
-const player = new Actor(100, FLOOR_LEVEL - 70, '#e67e22');
-const dummy = new Actor(750, FLOOR_LEVEL - 70, '#57606f', true);
-let buildings = [];
-let particles = [];
-const keys = {};
-
-function initMapEnvironment() {
-    buildings = [];
-    buildings.push(new Building(350, 3, 5));
-    buildings.push(new Building(600, 2, 7));
-    buildings.push(new Building(1100, 4, 4));
-    buildings.push(new Building(1450, 3, 6));
-}
-
-function createSparks(x, y, color, count) {
-    for(let i=0; i<count; i++) {
-        particles.push(new Particle(x, y, (Math.random()-0.5)*12, (Math.random()-0.5)*12, color, Math.random()*25 + 15));
-    }
-}
-
-function smashBuildingsAt(targetX, targetY, radius) {
-    buildings.forEach(bld => {
-        bld.blocks.forEach(b => {
-            if (!b.destroyed) {
-                let distX = b.x + b.w/2 - targetX;
-                let distY = b.y + b.h/2 - targetY;
-                if (Math.sqrt(distX*distX + distY*distY) < radius) {
-                    b.hp -= 15;
-                    if (b.hp <= 0) {
-                        b.destroyed = true;
-                        coins += 15; // Building destruction economic yields
-                        createSparks(b.x + b.w/2, b.y + b.h/2, '#7f8c8d', 10);
-                    }
-                }
-            }
-        });
-    });
-}
-
-function checkHitboxIntersection(hx, hy, hw, hh, dmg, kx, ky) {
-    let target = dummy; // Sandbox training focal mapping targets
-    if (hx < target.x + target.width && hx + hw > target.x &&
-        hy < target.y + target.height && hy + hh > target.y) {
-        target.damage(dmg, kx, ky);
-        return true;
-    }
-    return false;
-}
-
-// User Action Interaction UI Bindings
-function toggleModal(id) {
-    let el = document.getElementById(id);
-    el.style.display = (el.style.display === 'block') ? 'none' : 'block';
-}
-
-function selectCharacter(key) {
-    currentPreset = key;
-    player.color = CHARACTERS[key].color;
-    player.maxHealth = CHARACTERS[key].maxHp;
-    player.health = player.maxHealth;
-    document.getElementById('char-display').innerText = "CHARACTER: " + CHARACTERS[key].name;
-    toggleModal('char-modal');
-    createSparks(player.x, player.y + 20, player.color, 25);
-}
-
-function buyWeapon(name, cost) {
-    if (coins >= cost && !inventory.includes(name)) {
-        coins -= cost;
-        inventory.push(name);
-        equippedWeapon = name;
-        document.getElementById('weapon-display').innerText = name.replace('_', ' ');
-        toggleModal('shop-modal');
-        alert("Equipped: " + name.replace('_', ' '));
-    } else if (inventory.includes(name)) {
-        equippedWeapon = name;
-        document.getElementById('weapon-display').innerText = name.replace('_', ' ');
-        toggleModal('shop-modal');
-    } else {
-        alert("Insufficient Coins!");
-    }
-}
-
-// Input Listener Interceptors Mapping
-window.addEventListener('keydown', e => { 
-    keys[e.key] = true; 
-    if (e.key.toLowerCase() === 'q') player.executeSpecialAbility();
-    if (e.key === 'Shift') { // Instantaneous Translation Dash Matrix
-        player.vx = player.direction * 18;
-        createSparks(player.x, player.y + 30, 'rgba(255,255,255,0.4)', 5);
-    }
-});
-window.addEventListener('keyup', e => { keys[e.key] = false; });
-canvas.addEventListener('mousedown', () => { player.attackM1(); });
-
-// Auto Map Generation Loops Refresh
-setInterval(initMapEnvironment, 25000);
-
-// Continuous Core System Execution Frame Loop
-function renderLoop() {
-    // Process input operations transformations
-    if (player.state === 'idle') {
-        if (keys['a'] || keys['A']) { player.vx = -5; player.direction = -1; }
-        if (keys['d'] || keys['D']) { player.vx = 5; player.direction = 1; }
-        if ((keys['w'] || keys['W']) && player.isGrounded) { player.vy = -12; player.isGrounded = false; }
-    }
-
-    // Execution system entity updates
-    player.update();
-    dummy.update();
-
-    // Camera follow mechanics layout smoothing calculations
-    cameraX += (player.x - cameraX - canvas.width / 3) * 0.1;
-    cameraX = Math.max(0, Math.min(1100, cameraX)); // Limit camera boundaries
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    ctx.save();
-    // Screen shaking engine matrix transform operations execution
-    if (screenShake > 0) {
-        ctx.translate((Math.random()-0.5)*screenShake, (Math.random()-0.5)*screenShake);
-        screenShake *= 0.88;
-    }
-
-    // Render Stage Base Ground Floor Limits
-    ctx.fillStyle = '#1e1e2f';
-    ctx.fillRect(0 - cameraX, FLOOR_LEVEL, 2200, canvas.height - FLOOR_LEVEL);
-    ctx.fillStyle = '#3f51b5';
-    ctx.fillRect(0 - cameraX, FLOOR_LEVEL, 2200, 6);
-
-    // Structural and object renders
-    buildings.forEach(b => b.draw());
-    
-    // Render Dummy Targets Frame Layouts
-    ctx.fillStyle = dummy.state === 'hitstun' ? '#ff7675' : dummy.color;
-    ctx.fillRect(dummy.x - cameraX, dummy.y, dummy.width, dummy.height);
-
-    // Render Main Active Controlled Player Entity Character Layout
-    ctx.fillStyle = player.state === 'hitstun' ? '#95a5a6' : player.color;
-    ctx.fillRect(player.x - cameraX, player.y, player.width, player.height);
-    
-    // Simple Weapon Indicator overlay render attachments onto actors frame structures
-    if (equippedWeapon !== 'None') {
-        ctx.fillStyle = '#00e5ff';
-        let wX = player.direction === 1 ? player.x + player.width - cameraX : player.x - 10 - cameraX;
-        ctx.fillRect(wX, player.y + 25, 10, 20);
-    }
-
-    // Handle and render structural particle loops
-    particles = particles.filter(p => p.life > 0);
-    particles.forEach(p => { p.update(); p.draw(); });
-
-    ctx.restore();
-
-    // Fast-refresh Native HTML State Layer Updates interfaces
-    document.getElementById('hp-bar').style.width = (player.health / player.maxHealth)*100 + '%';
-    document.getElementById('ce-bar').style.width = player.energy + '%';
-    document.getElementById('enemy-hp-bar').style.width = dummy.health + '%';
-    document.getElementById('coin-count').innerText = coins;
-
-    if (dummy.health <= 0) { // Automatic Dummy Respawn loop module standard
-        dummy.health = 100;
-        dummy.x = player.x + 400 * player.direction;
-        if (dummy.x > 1900 || dummy.x < 50) dummy.x = 500;
-    }
-
-    requestAnimationFrame(renderLoop);
-}
-
-// Initial Boot Sequence Execution
-initMapEnvironment();
-renderLoop();
-</script>
-</body>
-</html>
+        if (!this.
