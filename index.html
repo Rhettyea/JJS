@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JJS 2D</title>
+    <title>JJS 2D: Unlimited Shibuya Revamp (Enhanced Ability Engine)</title>
     <style>
         body {
             margin: 0; background-color: #040406; color: #fff;
@@ -62,6 +62,7 @@
         }
         #controls-legend { margin-top: 10px; color: #a4b0be; font-size: 12px; text-align: center; line-height: 1.4; }
         .hl { color: #ff4757; font-weight: bold; }
+        .gl { color: #00d2d3; font-weight: bold; }
 
         #clash-ui {
             position: absolute; display: none; font-weight: bold; text-align: center;
@@ -75,6 +76,14 @@
             position: absolute; display: none; background: rgba(4,4,6,0.98);
             border: 2px solid #ff4757; border-radius: 10px; padding: 30px; text-align: center; z-index: 30;
             box-shadow: 0 0 40px rgba(255,71,87,0.6);
+        }
+        
+        #ability-hud {
+            margin-top: 8px; display: flex; gap: 8px; justify-content: center; width: 100%;
+        }
+        .ability-slot {
+            background: rgba(13, 14, 21, 0.9); border: 1px solid #ff4757; padding: 4px 10px;
+            font-size: 11px; border-radius: 4px; font-weight: bold; text-align: center; width: 110px;
         }
     </style>
 </head>
@@ -98,6 +107,11 @@
             <div style="margin-top:5px; font-size:13px;">💰 Coins: <span id="coin-count" style="color:#ffd700;font-weight:bold;">100</span> | Lives left: <span id="lives-count" style="color:#ff4757; font-weight:bold;">N/A</span></div>
             <button onclick="toggleModal('char-modal')">Roster Select</button>
             <button onclick="toggleModal('shop-modal')">Shibuya Vending</button>
+            
+            <div id="ability-hud">
+                <div class="ability-slot" id="slot-e">E: Skill 1</div>
+                <div class="ability-slot" id="slot-f">F: Skill 2</div>
+            </div>
         </div>
 
         <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
@@ -119,7 +133,7 @@
             <div class="grid-btn" onclick="selectCharacter('gojo')">Satoru Gojo<br><span style="color:#00a8ff;font-size:9px;">DE: Unlimited Void</span></div>
             <div class="grid-btn" onclick="selectCharacter('sukuna')">Ryomen Sukuna<br><span style="color:#e84118;font-size:9px;">DE: Malevolent Shrine</span></div>
             <div class="grid-btn" onclick="selectCharacter('yuji')">Yuji Itadori<br><span style="color:#ff9f43;font-size:9px;">ULT: 4x Black Flash Rush</span></div>
-            <div class="grid-btn" onclick="selectCharacter('megumi')">Megumi Fushiguro<br><span style="color:#22a6b3;font-size:9px;">ULT: Eight-Handled Sword Mahoraga Mutation</span></div>
+            <div class="grid-btn" onclick="selectCharacter('megumi')">Megumi Fushiguro<br><span style="color:#22a6b3;font-size:9px;">ULT: Mahoraga Mutation</span></div>
             <div class="grid-btn" onclick="selectCharacter('mahito')">Mahito<br><span style="color:#9b59b6;font-size:9px;">DE: Self-Embodiment</span></div>
             <div class="grid-btn" onclick="selectCharacter('naoya')">Naoya Zenin<br><span style="color:#f1c40f;font-size:9px;">ULT: Projection Blitz</span></div>
             <div class="grid-btn" onclick="selectCharacter('hakari')">Kinji Hakari<br><span style="color:#2ecc71;font-size:9px;">DE: Idle Death Gamble</span></div>
@@ -149,26 +163,27 @@
     <div id="tutorial-modal" class="modal" style="width: 450px; text-align: left; line-height: 1.6;">
         <button class="close-btn" onclick="toggleModal('tutorial-modal')">X</button>
         <h3 style="color:#00d2d3; margin-top:0; border-bottom: 1px solid #00a8ff; padding-bottom: 5px;">Sorcerer Training Academy</h3>
-        <p><strong>Movement Basics:</strong> Use <span class="hl">A</span> and <span class="hl">D</span> to move horizontally across Shibuya. Press <span class="hl">W</span> to initiate a jump.</p>
-        <p><strong>Wall Running:</strong> Jump towards any raised platform structure and hold your direction key (<span class="hl">A</span> or <span class="hl">D</span>) against it while in the air to scale it vertically.</p>
-        <p><strong>Cursed Dashes:</strong> Tap <span class="hl">SHIFT</span> to perform an instantaneous dash toward the direction you are facing.</p>
-        <p><strong>Combat Framework:</strong>
-            <br>• <span class="hl">Left Click</span>: Execute quick standard weapon/fist close range combos (M1).
-            <br>• <span class="hl">R Key</span>: Unleash a long range Cursed Drag / Shadow Snare pull strategy.
-            <br>• <span class="hl">3 Key</span>: Black Flash rhythm sync. Strike exactly 1.0 seconds apart to chain streaks. Reach 4 hits to fire a Super Spark.
+        <p><strong>Movement Basics:</strong> Use <span class="hl">A</span> and <span class="hl">D</span> to move horizontally. Press <span class="hl">W</span> to jump.</p>
+        <p><strong>Wall Running:</strong> Jump towards structures and hold your direction key against it while in the air to scale it vertically.</p>
+        <p><strong>Cursed Dashes:</strong> Tap <span class="hl">SHIFT</span> to perform an instantaneous burst dash.</p>
+        <p><strong>Core Combat Abilities:</strong>
+            <br>• <span class="hl">Left Click</span>: Primary standard close range weapon strike (M1).
+            <br>• <span class="hl">R Key</span>: Cursed Shadow Pull utility grapple mechanism.
+            <br>• <span class="hl">3 Key</span>: Black Flash rhythm alignment. Strike exactly 1.0s apart to stack lines.
+            <br>• <span class="gl">E Key</span>: Signature Move #1 (Context Dynamic).
+            <br>• <span class="gl">F Key</span>: Signature Move #2 (Context Dynamic).
         </p>
-        <p><strong>Domain Expansions & Ultimates:</strong> When Cursed Energy (Blue Bar) reaches 100%, trigger your ultimate technique using <span class="hl">Q Key</span>. Caster domains lock caught players inside dedicated pocket map battle configurations until the timer runs out!</p>
+        <p><strong>State Enhancements (Q Key):</strong> Triggering your ultimate or entering a domain expansion shifts your status bar into maximum potential—replacing your standard <span class="gl">E</span> and <span class="gl">F</span> tools with unique, highly enhanced technical moves until state dissolution rules finish execution!</p>
     </div>
 
     <canvas id="shibuyaCanvas" width="1000" height="500"></canvas>
 
     <div id="controls-legend">
-        Move: <span class="hl">A / D</span> | Jump: <span class="hl">W</span> | Dash: <span class="hl">SHIFT</span> | Wall Run: <span class="hl">Hold Direction against structures while airborne</span><br>
-        Basic M1: <span class="hl">Left Click</span> | Reversal/Shadow Pull: <span class="hl">R Key</span> | JJS Black Flash Sync: <span class="hl">3 Key</span> (Hit exactly 1 second apart) | Ultimate / Domain Expansion: <span class="hl">Q Key</span>
+        Move: <span class="hl">A / D</span> | Jump: <span class="hl">W</span> | Dash: <span class="hl">SHIFT</span> | Wall Run: <span class="hl">Hold Direction against structures</span><br>
+        Basic M1: <span class="hl">Left Click</span> | Shadow Pull: <span class="hl">R Key</span> | Black Flash Sync: <span class="hl">3 Key</span> | Signature Skills: <span class="gl">E</span> & <span class="gl">F Keys</span> | Ultimate State Shift: <span class="hl">Q Key</span>
     </div>
 
 <script>
-// Synthesized Procedural JJS Audio Generation System
 const AudioEngine = {
     ctx: null,
     init() { 
@@ -198,12 +213,6 @@ const AudioEngine = {
         gain.gain.setValueAtTime(0.6, this.ctx.currentTime);
         gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
         osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.4);
-        
-        let osc2 = this.ctx.createOscillator(), gain2 = this.ctx.createGain();
-        osc2.type = 'sawtooth'; osc2.frequency.setValueAtTime(150, this.ctx.currentTime);
-        gain2.gain.setValueAtTime(0.3, this.ctx.currentTime);
-        gain2.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
-        osc2.connect(gain2); gain2.connect(this.ctx.destination); osc2.start(); osc2.stop(this.ctx.currentTime + 0.2);
     },
     playDomain() {
         this.init(); let osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
@@ -220,24 +229,6 @@ const AudioEngine = {
         gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
         gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
         osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.4);
-    },
-    playRememberSong(durationSec) {
-        this.init();
-        let startTime = this.ctx.currentTime;
-        let notes = [220, 261, 329, 392, 440, 523, 659, 783]; 
-        let noteIdx = 0;
-        
-        let interval = setInterval(() => {
-            if (this.ctx.currentTime - startTime > durationSec) { clearInterval(interval); return; }
-            let osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(notes[noteIdx % notes.length], this.ctx.currentTime);
-            gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
-            osc.connect(gain); gain.connect(this.ctx.destination);
-            osc.start(); osc.stop(this.ctx.currentTime + 0.3);
-            noteIdx++;
-        }, 150);
     }
 };
 
@@ -259,7 +250,6 @@ let playerLives1v1 = 3;
 let oneVsOneWonCutscene = false;
 let cutsceneTimer = 0;
 
-// Hyper-revamped Real Domain Expansion Tracking Architecture
 let domainActive = false;
 let domainColor = '';
 let currentDomainOwner = null;
@@ -267,10 +257,10 @@ let domainOriginX = 0;
 let domainOriginY = 0;
 let domainMaxRadius = 380;
 let domainCurrentRadius = 0;
-let domainExpansionState = 'idle'; // 'expanding', 'locked', 'shrinking'
+let domainExpansionState = 'idle'; 
 let domainMapActive = false;
 let domainTimer = 0;
-let encapsulatedFighters = []; // List of actors pulled inside the barrier map
+let encapsulatedFighters = []; 
 
 let isClashing = false;
 let clashFighter1 = null;
@@ -288,28 +278,84 @@ let slashNameText2 = '';
 const WEAPONS_GACHA = ['Slaughter Demon', 'Playful Cloud Staff', 'Inverted Spear of Heaven', 'Dragon Bone Sword'];
 
 const ROSTER = {
-    gojo: { name: "Satoru Gojo", color: "#00a8ff", isDomain: true, dmg: 22, desc: "Blue Pull & Limitless M1" },
-    sukuna: { name: "Ryomen Sukuna", color: "#e84118", isDomain: true, dmg: 25, desc: "Dismantle Sweep & Cleave" },
-    yuji: { name: "Yuji Itadori", color: "#ff9f43", isDomain: false, dmg: 19, desc: "Instant Black Flash Rush" },
-    megumi: { name: "Megumi Fushiguro", color: "#22a6b3", isDomain: false, dmg: 17, desc: "Shadow Grab & Mahoraga Summon" },
-    mahito: { name: "Mahito", color: "#8e44ad", isDomain: true, dmg: 16, desc: "Idle Transfiguration Slash" },
-    naoya: { name: "Naoya Zenin", color: "#f1c40f", isDomain: false, dmg: 14, desc: "Projection Blitz Dash" },
-    hakari: { name: "Kinji Hakari", color: "#2ecc71", isDomain: true, dmg: 15, desc: "Jackpot Mode Regeneration" },
-    choso: { name: "Choso", color: "#c0392b", isDomain: false, dmg: 17, desc: "Supernova Piercing Blood" },
-    todo: { name: "Aoi Todo", color: "#34495e", isDomain: false, dmg: 13, desc: "Boogie Woogie Swap" },
-    higuruma: { name: "Hiromi Higuruma", color: "#7f8c8d", isDomain: true, dmg: 12, desc: "Executioner Sword Proximity" },
-    yuta: { name: "Yuta Okkotsu", color: "#dff9fb", isDomain: true, dmg: 18, desc: "Rika Manifestation Sweep" },
-    nanami: { name: "Kento Nanami", color: "#f39c12", isDomain: false, dmg: 20, desc: "7:3 Critical Collapse Line" },
-    mechamaru: { name: "Mechamaru", color: "#95a5a6", isDomain: false, dmg: 19, desc: "Albatross Ultimate Beam" },
-    hanami: { name: "Hanami", color: "#27ae60", isDomain: true, dmg: 16, desc: "Roots Snare Eruption" },
-    locust: { name: "Locust Guy", color: "#16a085", isDomain: false, dmg: 14, desc: "Hexapod Fast Barrage" },
-    yuki: { name: "Yuki Tsukumo", color: "#e67e22", isDomain: false, dmg: 24, desc: "Star Rage Impact Density" },
-    haruta: { name: "Haruta Shigemo", color: "#e84393", isDomain: false, dmg: 11, desc: "Miracle Save Contingency" },
-    meimei: { name: "Mei Mei", color: "#00a8ff", isDomain: false, dmg: 21, desc: "Bird Strike Kamikaze Rush" },
-    mahoraga: { name: "Eight-Handled Sword Mahoraga", color: "#ebdccb", isDomain: false, dmg: 28, desc: "Extermination Blade Sweep" }
+    gojo: { 
+        name: "Satoru Gojo", color: "#00a8ff", isDomain: true, dmg: 22,
+        baseE: "Lapse Blue", baseF: "Reversal Red", ultE: "Hollow Purple Burst", ultF: "Infinite Punch Combo"
+    },
+    sukuna: { 
+        name: "Ryomen Sukuna", color: "#e84118", isDomain: true, dmg: 25,
+        baseE: "Dismantle Slash", baseF: "Cleave Grip", ultE: "Fire Arrow (Fuga)", ultF: "Spiderweb Ground Crack"
+    },
+    yuji: { 
+        name: "Yuji Itadori", color: "#ff9f43", isDomain: false, dmg: 19,
+        baseE: "Divergent Hit", baseF: "Sliding Sweep", ultE: "Soul Perforator", ultF: "Manji Kick Rush"
+    },
+    megumi: { 
+        name: "Megumi Fushiguro", color: "#22a6b3", isDomain: false, dmg: 17,
+        baseE: "Divine Dog Leap", baseF: "Nue Shockwave", ultE: "Sword Wheel Pierce", ultF: "Ground Shatter Sweep" 
+    },
+    mahito: { 
+        name: "Mahito", color: "#8e44ad", isDomain: true, dmg: 16,
+        baseE: "Soul Morph Needle", baseF: "Body Clone Burst", ultE: "Instant Spirit Body Blade", ultF: "Multi-Hand Crush"
+    },
+    naoya: { 
+        name: "Naoya Zenin", color: "#f1c40f", isDomain: false, dmg: 14,
+        baseE: "24fps Setup Dash", baseF: "Frame Freeze Hit", ultE: "Subsonic Shockwave Slam", ultF: "Supersonic Wall Bounce"
+    },
+    hakari: { 
+        name: "Kinji Hakari", color: "#2ecc71", isDomain: true, dmg: 15,
+        baseE: "Shutter Drop Door", baseF: "Ball Toss Strike", ultE: "Jackpot Right Hook", ultF: "Continuous Overdrive Left"
+    },
+    choso: { 
+        name: "Choso", color: "#c0392b", isDomain: false, dmg: 17,
+        baseE: "Blood Slice Arc", baseF: "Piercing Blood Beam", ultE: "Supernova Explosion", ultF: "Blood Meteor Fist"
+    },
+    todo: { 
+        name: "Aoi Todo", color: "#34495e", isDomain: false, dmg: 13,
+        baseE: "Clap Swap Trap", baseF: "Playful Strike Assist", ultE: "Unpredictable Beatdown", ultF: "Infinite Position Swap"
+    },
+    higuruma: { 
+        name: "Hiromi Higuruma", color: "#7f8c8d", isDomain: true, dmg: 12,
+        baseE: "Gavel Expansion Strike", baseF: "Law Barrier Protection", ultE: "Executioner Execution", ultF: "Guilty Verdict Smite"
+    },
+    yuta: { 
+        name: "Yuta Okkotsu", color: "#dff9fb", isDomain: true, dmg: 18,
+        baseE: "Cursed Speech Shock", baseF: "Rika Arm Manifest", ultE: "Pure Love Beam Cannon", ultF: "Copy Technique Storm"
+    },
+    nanami: { 
+        name: "Kento Nanami", color: "#f39c12", isDomain: false, dmg: 20,
+        baseE: "7:3 Ratio Chop", baseF: "Overtime Preparation", ultE: "Collapse Structural Break", ultF: "Ratio Rush Bludgeon"
+    },
+    mechamaru: { 
+        name: "Mechamaru", color: "#95a5a6", isDomain: false, dmg: 19,
+        baseE: "Miracle Cannon Shot", baseF: "Shield Pod Deployment", ultE: "Albatross Ultimate Beam", ultF: "Pigeon Missiles Array"
+    },
+    hanami: { 
+        name: "Hanami", color: "#27ae60", isDomain: true, dmg: 16,
+        baseE: "Wooden Spikes Rise", baseF: "Cursed Bud Absorption", ultE: "Solar Beam Cannon Field", ultF: "Roots Entangle Crushing"
+    },
+    locust: { 
+        name: "Locust Guy", color: "#16a085", isDomain: false, dmg: 14,
+        baseE: "Hexapod Fast Barrage", baseF: "Hard Shell Charge", ultE: "Locust Swarm Infestation", ultF: "Stomach Arm Execution"
+    },
+    yuki: { 
+        name: "Yuki Tsukumo", color: "#e67e22", isDomain: false, dmg: 24,
+        baseE: "Garuda Ball Whip", baseF: "Mass Multiplier Guard", ultE: "Black Hole Gravitation", ultF: "Star Rage Impact Sweep"
+    },
+    haruta: { 
+        name: "Haruta Shigemo", color: "#e84393", isDomain: false, dmg: 11,
+        baseE: "Hand-Sword Slash Trio", baseF: "Trip Up Trap Slice", ultE: "Miracle Luck Bounce Strike", ultF: "Unearned Victory Run"
+    },
+    meimei: { 
+        name: "Mei Mei", color: "#00a8ff", isDomain: false, dmg: 21,
+        baseE: "Battleaxe Swing Cleave", baseF: "Bird Scout Radar", ultE: "Kamikaze Bird Strike", ultF: "Cursed Tax Deduction"
+    },
+    mahoraga: { 
+        name: "Eight-Handled Sword Mahoraga", color: "#ebdccb", isDomain: false, dmg: 28,
+        baseE: "Extermination Blade Sweep", baseF: "Ground Shatter Sweep", ultE: "Wheel Spin Adaptation Slam", ultF: "Unblockable Wave Cleave"
+    }
 };
 
-// Base Real World Shibuya Overground Layout Map
 const PLATFORMS_SHIBUYA = [
     { x: 0, y: 450, w: 2500, h: 50, type: 'street' },        
     { x: 250, y: 330, w: 450, h: 20, type: 'subway_deck' },  
@@ -317,7 +363,6 @@ const PLATFORMS_SHIBUYA = [
     { x: 1350, y: 310, w: 550, h: 20, type: 'stairwell' }   
 ];
 
-// Special Dimension Dynamic Expansion Internal Environment Platforms
 const PLATFORMS_UNLIMITED_VOID = [
     { x: 100, y: 420, w: 800, h: 80, type: 'void_floor' },
     { x: 300, y: 280, w: 400, h: 20, type: 'void_cosmic' }
@@ -342,25 +387,24 @@ class Actor {
         this.width = (charType === 'mahoraga') ? 44 : 32; 
         this.height = (charType === 'mahoraga') ? 76 : 64;
         this.color = color; this.isAi = isAi; this.charType = charType;
-        this.health = 100; this.energy = 50;
+        this.health = 100; this.maxHealth = 100; this.energy = 50;
         this.direction = 1; this.state = 'idle'; this.stateTimer = 0;
         this.isGrounded = false;
         this.lastDivergentTime = 0;
         this.bfStreak = 0;
         this.divergentCooldown = false;
         this.trail = [];
-        this.mahoragaWheelAngle = 0; // Distinct angle parameter for rendering the back wheel frame
+        this.mahoragaWheelAngle = 0;
+        this.isStateEnhanced = false; 
     }
 
     update() {
         if (isClashing || slashCutsceneActive || oneVsOneWonCutscene) return;
 
-        // Maintain constant wheel animation turning movement if actor is currently morphed into Mahoraga
         if (this.charType === 'mahoraga') {
             this.mahoragaWheelAngle += 0.03;
         }
 
-        // Custom domain map layout boundary collision check context rules
         if (domainMapActive) {
             if (this.x < 110) { this.x = 110; this.vx = 0; }
             if (this.x + this.width > 890) { this.x = 890 - this.width; this.vx = 0; }
@@ -375,12 +419,12 @@ class Actor {
             this.trail.push({x: this.x, y: this.y});
             if(this.trail.length > 5) this.trail.shift();
         } else {
-            this.trail.shift();
+            if(this.trail.length > 0) this.trail.shift();
         }
 
         PLATFORMS.forEach(plat => {
             if (this.x + this.width > plat.x && this.x < plat.x + plat.w &&
-                this.y + this.height >= plat.y && this.y + this.height - this.vy <= plat.y + 10) {
+                this.y + this.height >= plat.y && this.y + this.height - this.vy <= plat.y + 12) {
                 this.y = plat.y - this.height;
                 this.vy = 0;
                 this.isGrounded = true;
@@ -405,7 +449,6 @@ class Actor {
     processAiLogic() {
         let potentialTargets = [];
         
-        // If locked inside a dynamic map environment domain frame, target selection is limited only to trapped fighters
         if (domainMapActive) {
             encapsulatedFighters.forEach(f => { if (f !== this && f.health > 0) potentialTargets.push(f); });
         } else {
@@ -428,17 +471,19 @@ class Actor {
         let dist = closestTarget.x - this.x;
         this.direction = dist > 0 ? 1 : -1;
 
-        if (Math.abs(dist) > 60) {
+        if (Math.abs(dist) > 80) {
             let movementSpeed = (currentGameMode === '1V1' ? 4.2 : 3.5);
-            if (this.charType === 'mahoraga') movementSpeed = 4.8; // Specialized prompt behavior for running speed adjustments
+            if (this.charType === 'mahoraga') movementSpeed = 4.8;
             this.vx = this.direction * movementSpeed;
             if (Math.random() < 0.02 && this.isGrounded) { this.vy = -11; this.isGrounded = false; }
         } else {
             let decision = Math.random();
-            if (decision < 0.06) this.attackM1();
-            else if (decision < 0.07) this.executeRSpecial();
+            if (decision < 0.05) this.attackM1();
+            else if (decision < 0.07) this.executeSkill1();
+            else if (decision < 0.09) this.executeSkill2();
+            else if (decision < 0.10) this.executeRSpecial();
             
-            if (decision < 0.012 && this.energy >= 100) {
+            if (decision < 0.015 && this.energy >= 100) {
                 this.executeUltimateOrDomain();
             }
         }
@@ -451,7 +496,7 @@ class Actor {
         let damage = ROSTER[this.charType]?.dmg || 16;
 
         if (this.charType === 'mahoraga') {
-            range = 110; // Extra long sweep blade reach metrics
+            range = 110; 
             this.stateTimer = 22;
             AudioEngine.playHit();
             AudioEngine.playWheelSpin();
@@ -474,23 +519,44 @@ class Actor {
         executeHitboxSweep(this, hX, this.y + 10, range, 40, damage, this.direction * 11, -2.5, false);
     }
 
+    executeSkill1() {
+        if (this.state !== 'idle') return;
+        this.state = 'attacking'; this.stateTimer = 20;
+        AudioEngine.playHit();
+        
+        let range = 100, damage = 18;
+        if (this.isStateEnhanced) { range = 160; damage = 35; }
+        
+        let hX = this.direction === 1 ? this.x + this.width : this.x - range;
+        executeHitboxSweep(this, hX, this.y + 5, range, 45, damage, this.direction * 14, -4, false);
+        createParticles(this.x + (this.direction * 40), this.y + 15, this.color, 15);
+    }
+
+    executeSkill2() {
+        if (this.state !== 'idle') return;
+        this.state = 'attacking'; this.stateTimer = 24;
+        AudioEngine.playPull();
+        
+        let range = 120, damage = 22;
+        if (this.isStateEnhanced) { range = 200; damage = 40; }
+        
+        let hX = this.direction === 1 ? this.x + this.width : this.x - range;
+        executeHitboxSweep(this, hX, this.y - 5, range, 50, damage, this.direction * 5, -8, false);
+        createParticles(this.x + (this.direction * 50), this.y, '#ffffff', 20);
+    }
+
     executeRSpecial() {
         if (this.state !== 'idle') return;
-        
-        // Mahoraga gets a faster double smash option substituting shadow grabs
         if (this.charType === 'mahoraga') {
-            this.state = 'attacking'; this.stateTimer = 16;
             this.attackM1();
             return;
         }
-
         this.state = 'attacking'; this.stateTimer = 22;
-        AudioEngine.playPre();
         AudioEngine.playPull();
         let range = 240;
         let hX = this.direction === 1 ? this.x + this.width : this.x - range;
         executeHitboxSweep(this, hX, this.y - 10, range, 70, 12, 0, 0, true);
-        createParticles(this.x + (this.direction * 75), this.y + 20, (this.charType === 'gojo' ? '#00a8ff' : (this.charType === 'megumi' ? '#10ac84' : '#ff4757')), 20);
+        createParticles(this.x + (this.direction * 75), this.y + 20, this.color, 20);
     }
 
     handleDivergentFistInput() {
@@ -517,8 +583,6 @@ class Actor {
             screenShake = 20;
             AudioEngine.playBf();
 
-            if(this.charType === 'gojo') { AudioEngine.playRememberSong(1.5); }
-
             if (this.bfStreak >= 4) {
                 this.triggerSuperBlackFlash();
             } else {
@@ -526,9 +590,7 @@ class Actor {
                 let range = 85;
                 let hX = this.direction === 1 ? this.x + this.width : this.x - range;
                 executeHitboxSweep(this, hX, this.y, range, 50, 35, this.direction * 22, -9, false);
-                
                 createParticles(hX + range/2, this.y + 20, '#ff003c', 35);
-                createParticles(hX + range/2, this.y + 20, '#000000', 20);
                 if (!this.isAi) document.getElementById('bf-status').innerText = `STREAK: ${this.bfStreak} | BLACK FLASH Spark!`;
             }
         } else {
@@ -541,15 +603,11 @@ class Actor {
         this.state = 'attacking'; this.stateTimer = 40;
         screenShake = 45;
         AudioEngine.playBf();
-        if(this.charType === 'gojo') { AudioEngine.playRememberSong(3.0); }
 
         let range = 210;
         let hX = this.direction === 1 ? this.x + this.width : this.x - range;
         executeHitboxSweep(this, hX, this.y - 40, range, 110, 75, this.direction * 50, -16, false);
-        
         createParticles(this.x, this.y, '#ff003c', 80);
-        createParticles(this.x, this.y, '#000000', 60);
-        createParticles(this.x, this.y, '#ffffff', 30);
 
         this.divergentCooldown = true;
         if (!this.isAi) document.getElementById('bf-status').innerText = `CRITICAL OVERHEAT!`;
@@ -573,9 +631,10 @@ class Actor {
         if (this.energy < 100) return;
         this.energy = 0;
         let data = ROSTER[this.charType];
+        this.isStateEnhanced = true;
+        updateAbilityHudLabels();
 
         if (this.charType === 'mahoraga') {
-            // Mahoraga releases an unblockable multi-directional field shatter wave instead of spawning domains
             screenShake = 35;
             AudioEngine.playBf();
             AudioEngine.playWheelSpin();
@@ -591,29 +650,28 @@ class Actor {
             triggerJjsSlashCutscene(this.color, "MEGUMI: WITH THIS TREASURE I SUMMON...");
             
             setTimeout(() => {
-                // Mutate the caster into Mahoraga until death occurs
                 this.charType = 'mahoraga';
                 this.color = ROSTER['mahoraga'].color;
                 this.width = 44;
                 this.height = 76;
                 this.mahoragaWheelAngle = 0;
+                this.isStateEnhanced = true;
                 
                 if (!this.isAi) {
                     document.getElementById('char-display').innerText = "CHARACTER: Eight-Handled Sword Mahoraga";
+                    updateAbilityHudLabels();
                 }
                 
                 AudioEngine.playWheelSpin();
                 createParticles(this.x, this.y, '#ffffff', 60);
-                createParticles(this.x, this.y, '#10ac84', 40);
             }, 800);
             return;
         }
 
         if (data.isDomain) {
             if (domainActive || slashCutsceneActive) {
-                initiateDomainClash(currentDomainOwner ? currentDomainOwner : activeAis[0], this);
+                initiateDomainClash(currentDomainOwner ? currentDomainOwner : (activeAis[0] || this), this);
             } else {
-                // Initialize Black Dome Enclosure Process Loop
                 currentDomainOwner = this;
                 domainActive = true;
                 domainExpansionState = 'expanding';
@@ -652,12 +710,10 @@ class Actor {
         });
         ctx.globalAlpha = 1.0;
 
-        // Specialized Render Configuration for Mutation State Drawing Loops
         if (this.charType === 'mahoraga') {
             ctx.fillStyle = this.state === 'hitstun' ? '#7f8c8d' : '#ebdccb'; 
             ctx.fillRect(this.x - cameraX, this.y, this.width, this.height);
             
-            // Draw Giant Attached Extermination Blade Arm Attachment
             ctx.fillStyle = '#7f8c8d';
             let armX = this.direction === 1 ? this.x + this.width - cameraX : this.x - 16 - cameraX;
             ctx.fillRect(armX, this.y + 24, 16, 12);
@@ -665,7 +721,6 @@ class Actor {
             let bladeX = this.direction === 1 ? armX + 16 : armX - 35;
             ctx.fillRect(bladeX, this.y + 12, 35, 32);
 
-            // Draw Rotating Law Wheel Object behind back frames
             ctx.save();
             ctx.translate(this.x + 22 - cameraX, this.y - 20);
             ctx.rotate(this.mahoragaWheelAngle);
@@ -753,12 +808,10 @@ function checkAndEncloseFighters() {
         }
     });
 
-    // If matching candidates exist, map configuration transformation triggers
     if (encapsulatedFighters.length > 0) {
         domainMapActive = true;
-        domainTimer = 420; // 7 seconds inside domain map dimension
+        domainTimer = 420; 
         
-        // Select domain map profile background structures based on character caster
         if (currentDomainOwner.charType === 'gojo') {
             PLATFORMS = [...PLATFORMS_UNLIMITED_VOID];
         } else if (currentDomainOwner.charType === 'sukuna') {
@@ -767,7 +820,6 @@ function checkAndEncloseFighters() {
             PLATFORMS = [...PLATFORMS_SELF_EMBODIMENT];
         }
 
-        // Reposition captured actors smoothly onto new dimensional maps layout coordinates
         let startX = 200;
         encapsulatedFighters.forEach(f => {
             f.x = startX;
@@ -779,7 +831,6 @@ function checkAndEncloseFighters() {
         overlay.style.display = 'block';
         overlay.style.background = `radial-gradient(circle, transparent 30%, ${domainColor} 98%)`;
     } else {
-        // Safe reset if nobody was caught inside the explosion radius
         resetDomainSystemsToNormal();
     }
 }
@@ -793,8 +844,11 @@ function resetDomainSystemsToNormal() {
     PLATFORMS = [...PLATFORMS_SHIBUYA];
     overlay.style.display = 'none';
     
-    // Teleport player back onto valid Shibuya street coordinates layout safely
-    if (player.x > 2400 || domainMapActive) {
+    player.isStateEnhanced = false;
+    activeAis.forEach(ai => ai.isStateEnhanced = false);
+    updateAbilityHudLabels();
+    
+    if (player.x > 2400 || player.y > 600) {
         player.x = 200; player.y = 300;
     }
 }
@@ -808,12 +862,10 @@ function initiateDomainClash(fighter1, fighter2) {
     AudioEngine.playBf();
     triggerJjsSlashCutscene(fighter1.color, ROSTER[fighter1.charType].name, fighter2.color, ROSTER[fighter2.charType].name);
 
-    if (!fighter1.isAi || !fighter2.isAi) {
-        clashUi.style.display = 'block';
-        clashUi.style.left = (window.innerWidth / 2 - 130) + 'px';
-        clashUi.style.top = (window.innerHeight / 2 - 160) + 'px';
-        clashCounter.innerText = "0 / 35";
-    }
+    clashUi.style.display = 'block';
+    clashUi.style.left = (window.innerWidth / 2 - 130) + 'px';
+    clashUi.style.top = (window.innerHeight / 2 - 160) + 'px';
+    clashCounter.innerText = "0 / 35";
 }
 
 function handleClashClickRegistration() {
@@ -834,22 +886,17 @@ function resolveClashWinner(winner, loser) {
     AudioEngine.playBf();
     loser.damage(60, winner.direction * 28, -13);
 
-    // Give winner instant ownership privileges over expansion state variables
     currentDomainOwner = winner;
     domainActive = true;
     domainExpansionState = 'expanding';
     domainCurrentRadius = 0;
-    domainOriginX = winner.x + 16;
-    domainOriginY = winner.y + 32;
+    domainOriginX = winner.x + winner.width/2;
+    domainOriginY = winner.y + winner.height/2;
     domainColor = winner.color;
 }
 
 function executeHitboxSweep(attacker, hx, hy, hw, hh, dmg, kx, ky, isPullMove = false) {
     let targets = domainMapActive ? encapsulatedFighters : [player, ...activeAis];
-    if (attacker && !attacker.isAi) {
-        ctx.fillStyle = isPullMove ? 'rgba(0, 168, 255, 0.35)' : 'rgba(255, 0, 60, 0.3)';
-        ctx.fillRect(hx - cameraX, hy, hw, hh);
-    }
 
     targets.forEach(t => {
         if (t && t.health > 0 && t !== attacker &&
@@ -859,11 +906,9 @@ function executeHitboxSweep(attacker, hx, hy, hw, hh, dmg, kx, ky, isPullMove = 
             if (isPullMove) {
                 t.x = attacker.direction === 1 ? attacker.x + attacker.width + 12 : attacker.x - t.width - 12;
                 t.y = attacker.y;
-                setTimeout(() => {
-                    t.damage(25, attacker.direction * 16, -6);
-                    createParticles(t.x, t.y + 20, '#ff003c', 25);
-                    screenShake = 15;
-                }, 100);
+                t.damage(25, attacker.direction * 16, -6);
+                createParticles(t.x, t.y + 20, '#ff003c', 25);
+                screenShake = 15;
             } else {
                 t.damage(dmg, kx, ky);
                 createParticles(t.x + 16, t.y + 32, '#ffffff', 8);
@@ -871,6 +916,26 @@ function executeHitboxSweep(attacker, hx, hy, hw, hh, dmg, kx, ky, isPullMove = 
             if (attacker && !attacker.isAi) coins += 8; 
         }
     });
+}
+
+function updateAbilityHudLabels() {
+    let currentData = ROSTER[player.charType];
+    if (!currentData) return;
+    
+    let slotE = document.getElementById('slot-e');
+    let slotF = document.getElementById('slot-f');
+    
+    if (player.isStateEnhanced) {
+        slotE.innerText = "E: " + currentData.ultE;
+        slotF.innerText = "F: " + currentData.ultF;
+        slotE.style.borderColor = "#00d2d3";
+        slotF.style.borderColor = "#00d2d3";
+    } else {
+        slotE.innerText = "E: " + currentData.baseE;
+        slotF.innerText = "F: " + currentData.baseF;
+        slotE.style.borderColor = "#ff4757";
+        slotF.style.borderColor = "#ff4757";
+    }
 }
 
 function toggleGameMode() {
@@ -888,7 +953,6 @@ function enterOneVsOneMode() {
     
     player.x = 150; player.y = 300; player.health = 100;
     
-    // Check if player select was left stuck on Mahoraga; reverse back to Gojo archetype layout base safely on new frames load
     if (player.charType === 'mahoraga') {
         player.charType = 'gojo'; player.color = ROSTER['gojo'].color; player.width = 32; player.height = 64;
         document.getElementById('char-display').innerText = "CHARACTER: Satoru Gojo";
@@ -896,6 +960,7 @@ function enterOneVsOneMode() {
 
     activeAis = [new Actor(750, 300, '#e84118', true, 'sukuna')];
     activeAis[0].maxHealth = 155; activeAis[0].health = 155; 
+    updateAbilityHudLabels();
 }
 
 function resetOneVsOneMode() {
@@ -918,6 +983,7 @@ function exitToLobby() {
         document.getElementById('char-display').innerText = "CHARACTER: Satoru Gojo";
     }
     spawnThreatAis();
+    updateAbilityHudLabels();
 }
 
 function startSukunaThroneCutscene() {
@@ -937,8 +1003,10 @@ function selectCharacter(key) {
     player.width = (key === 'mahoraga') ? 44 : 32;
     player.height = (key === 'mahoraga') ? 76 : 64;
     player.health = 100;
+    player.isStateEnhanced = false;
     document.getElementById('char-display').innerText = "CHARACTER: " + ROSTER[key].name;
     toggleModal('char-modal');
+    updateAbilityHudLabels();
     createParticles(player.x, player.y + 20, player.color, 25);
 }
 
@@ -964,12 +1032,16 @@ function rollWeapon() {
 
 window.addEventListener('keydown', e => {
     keys[e.key] = true;
-    if (isClashing && (e.key === '3' || e.key.toLowerCase() === 'f')) { handleClashClickRegistration(); return; }
+    let keyLower = e.key.toLowerCase();
+    
+    if (isClashing && (e.key === '3' || keyLower === 'f' || keyLower === 'e')) { handleClashClickRegistration(); return; }
     if (player.health <= 0 || player.state === 'hitstun' || slashCutsceneActive || oneVsOneWonCutscene) return;
 
     if (e.key === '3') player.handleDivergentFistInput();
-    if (e.key.toLowerCase() === 'r') player.executeRSpecial();
-    if (e.key.toLowerCase() === 'q') player.executeUltimateOrDomain();
+    if (keyLower === 'e') player.executeSkill1();
+    if (keyLower === 'f') player.executeSkill2();
+    if (keyLower === 'r') player.executeRSpecial();
+    if (keyLower === 'q') player.executeUltimateOrDomain();
     if (e.key === 'Shift') { 
         player.vx = player.direction * 18;
         createParticles(player.x, player.y + 32, 'rgba(255,255,255,0.4)', 6);
@@ -1046,14 +1118,13 @@ function loop() {
         return;
     }
 
-    // Process player input only if active and not stun locked
     if (player.state === 'idle' && player.health > 0) {
         let runVelocity = (player.charType === 'mahoraga') ? -6.8 : -5.6;
         if (keys['a'] || keys['A']) { player.vx = runVelocity; player.direction = -1; }
         if (keys['d'] || keys['D']) { player.vx = -runVelocity; player.direction = 1; }
         if ((keys['w'] || keys['W']) && player.isGrounded) { player.vy = -12.5; player.isGrounded = false; }
         
-        if (!player.isGrounded && Math.abs(player.vx) > 1) {
+        if (!player.isGrounded) {
             PLATFORMS.forEach(p => {
                 if (player.x + player.width + 6 >= p.x && player.x - 6 <= p.x + p.w && player.y > p.y - 45 && player.y < p.y + 25) {
                     if (keys['w'] || keys['W'] || keys['a'] || keys['A'] || keys['d'] || keys['D']) { player.vy = -4.8; }
@@ -1062,13 +1133,11 @@ function loop() {
         }
     }
 
-    // Dynamic Engine Update Loops Pass
     if (domainMapActive) {
         encapsulatedFighters.forEach(f => f.update());
         
         domainTimer--;
-        // Auto-trigger continuous high speed slash damage inside Sukuna's shrine environment
-        if (currentDomainOwner.charType === 'sukuna' && domainTimer % 18 === 0) {
+        if (currentDomainOwner && currentDomainOwner.charType === 'sukuna' && domainTimer % 18 === 0) {
             encapsulatedFighters.forEach(f => {
                 if (f !== currentDomainOwner) {
                     f.damage(6, 0, 0);
@@ -1085,9 +1154,8 @@ function loop() {
         activeAis.forEach(ai => ai.update());
     }
 
-    // Dynamic Camera Tracking Frame Matrix
     if (domainMapActive) {
-        cameraX = 0; // Fixate viewpoint inside custom domain map dimensions perfectly
+        cameraX = 0; 
     } else {
         cameraX += (player.x - cameraX - canvas.width / 3) * 0.09;
         cameraX = Math.max(0, Math.min(1500, cameraX));
@@ -1100,10 +1168,8 @@ function loop() {
         screenShake *= 0.88;
     }
 
-    // DRAW ENVIRONMENTAL BACKGROUND LAYOUTS MAPS
-    if (domainMapActive) {
+    if (domainMapActive && currentDomainOwner) {
         if (currentDomainOwner.charType === 'gojo') {
-            // Unlimited Void Deep Space Visual Render Strip
             ctx.fillStyle = '#020208'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             for (let i = 0; i < 40; i++) {
                 ctx.fillStyle = `rgba(255,255,255,${Math.random()})`;
@@ -1112,12 +1178,10 @@ function loop() {
             ctx.fillStyle = 'rgba(0,168,255,0.08)';
             ctx.beginPath(); ctx.arc(500, 250, 180, 0, Math.PI*2); ctx.fill();
         } else if (currentDomainOwner.charType === 'sukuna') {
-            // Malevolent Shrine Red River Visual Layout Render
             ctx.fillStyle = '#1c0505'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = '#e84118'; ctx.font = 'bold 14px Arial';
             ctx.fillText("⛩️ MALEVOLENT SHRINE STRUCTURE INTERIOR", 360, 120);
         } else {
-            // Mahito Hand Web Enclosure Render Pass
             ctx.fillStyle = '#0d0d11'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.strokeStyle = '#8e44ad'; ctx.lineWidth = 2;
             for(let j=0; j<10; j++) {
@@ -1138,13 +1202,11 @@ function loop() {
         ctx.fillRect(p.x - cameraX, p.y, p.w, 4); 
     });
 
-    // 2D CANVAS RENDER PASS FOR TRUE BLACK DOME EXPANSION CLOSURE
     if (domainActive && !domainMapActive) {
         if (domainExpansionState === 'expanding') {
             domainCurrentRadius += 16;
             if (domainCurrentRadius >= domainMaxRadius) {
                 domainExpansionState = 'locked';
-                // Trigger containment evaluation frame loop right at peak size expansion
                 checkAndEncloseFighters();
             }
         }
@@ -1176,14 +1238,12 @@ function loop() {
     if(Math.random() < 0.12) player.energy = Math.min(100, player.energy + 1);
     activeAis.forEach(ai => { if(Math.random() < 0.12) ai.energy = Math.min(100, ai.energy + 1); });
 
-    // HEALTH STATE ENGINE EVALUATION ROUTINES
     if (currentGameMode === '1V1') {
-        if (activeAis[0].health <= 0) startSukunaThroneCutscene();
+        if (activeAis[0] && activeAis[0].health <= 0) startSukunaThroneCutscene();
         if (player.health <= 0) {
             playerLives1v1--;
             document.getElementById('lives-count').innerText = playerLives1v1;
             
-            // If mutation state was active, revert traits back onto base profiles on death frame resets
             if (player.charType === 'mahoraga') {
                 player.charType = 'gojo'; player.color = ROSTER['gojo'].color; player.width = 32; player.height = 64;
                 document.getElementById('char-display').innerText = "CHARACTER: Satoru Gojo";
@@ -1196,7 +1256,6 @@ function loop() {
         let referenceEntities = domainMapActive ? encapsulatedFighters : [player, ...activeAis];
         referenceEntities.forEach(f => {
             if (f.health <= 0) {
-                // Check if target entity was an active morphed Mahoraga; revert them back to normal upon death loop frame reload
                 if (f.charType === 'mahoraga') {
                     if (f.isAi) {
                         f.charType = 'megumi'; f.color = ROSTER['megumi'].color; f.width = 32; f.height = 64;
@@ -1207,9 +1266,11 @@ function loop() {
                 }
 
                 f.health = 100; f.state = 'idle';
+                f.isStateEnhanced = false;
                 if (!domainMapActive) {
                     f.x = player.x + (Math.random() * 450 + 250) * (Math.random() > 0.5 ? 1 : -1);
                     if (f.x < 50 || f.x > 2300) f.x = 800;
+                    f.y = 300;
                 } else {
                     f.x = 300 + (Math.random() * 200); f.y = 200;
                 }
@@ -1224,6 +1285,7 @@ function loop() {
 }
 
 spawnThreatAis();
+updateAbilityHudLabels();
 loop();
 </script>
 </body>
