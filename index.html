@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JJS 2D</title>
+    <title>JJS 2D: Unlimited Shibuya Revamp (Mahoraga Update)</title>
     <style>
         body {
-            margin: 0; background-color: #08080c; color: #fff;
+            margin: 0; background-color: #040406; color: #fff;
             font-family: 'Segoe UI', Arial, sans-serif;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             height: 100vh; overflow: hidden; user-select: none;
@@ -16,74 +16,80 @@
             display: flex; justify-content: space-between; pointer-events: none; z-index: 5;
         }
         .hud-panel {
-            background: rgba(10, 10, 20, 0.9); padding: 12px 20px;
-            border-radius: 8px; border: 2px solid #1f1f3a;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.6); pointer-events: auto;
+            background: rgba(6, 6, 14, 0.95); padding: 12px 20px;
+            border-radius: 8px; border: 2px solid #ff4757;
+            box-shadow: 0 0 20px rgba(255, 71, 87, 0.2); pointer-events: auto;
         }
-        .bar-bg { width: 220px; height: 14px; background: #111; border: 1px solid #444; border-radius: 4px; margin-top: 5px; overflow: hidden; }
-        .hp-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ca1c1c, #f44336); transition: width 0.05s; }
-        .ce-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #1080ff, #00e5ff); transition: width 0.05s; }
+        .bar-bg { width: 220px; height: 14px; background: #111; border: 1px solid #333; border-radius: 4px; margin-top: 5px; overflow: hidden; }
+        .hp-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff003c, #ff4d4d); transition: width 0.05s; }
+        .ce-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #0055ff, #00ffcc); transition: width 0.05s; }
         
         button {
-            background: #2f3542; color: white; border: 1px solid #57606f;
+            background: #1e272e; color: white; border: 1px solid #3d414a;
             padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px;
+            transition: all 0.2s;
         }
-        button:hover { background: #57606f; }
+        button:hover { background: #3d414a; border-color: #ff4757; }
         
-        .mode-btn { background: #ff4757; border: 1px solid #ff6b81; font-size: 14px; padding: 8px 16px; border-radius: 6px; box-shadow: 0 0 10px rgba(255,71,87,0.4); }
-        .mode-btn:hover { background: #ff6b81; }
+        .mode-btn { background: #ff4757; border: 1px solid #ff6b81; font-size: 14px; padding: 8px 16px; border-radius: 6px; box-shadow: 0 0 15px rgba(255,71,87,0.5); }
+        .mode-btn:hover { background: #ff6b81; transform: scale(1.05); }
 
         .modal {
-            display: none; position: absolute; background: rgba(5,5,12,0.98);
-            border: 2px solid #00e5ff; border-radius: 10px; padding: 20px; z-index: 10;
-            box-shadow: 0 0 20px rgba(0, 229, 255, 0.3); max-height: 400px; overflow-y: auto;
+            display: none; position: absolute; background: rgba(3, 3, 8, 0.99);
+            border: 2px solid #ff4757; border-radius: 10px; padding: 20px; z-index: 10;
+            box-shadow: 0 0 30px rgba(255, 71, 87, 0.4); max-height: 420px; overflow-y: auto;
         }
-        .grid { display: grid; grid-template-columns: repeat(3, 160px); gap: 10px; margin-top: 10px; }
+        .grid { display: grid; grid-template-columns: repeat(4, 150px); gap: 10px; margin-top: 10px; }
         .grid-btn {
-            background: #111424; border: 1px solid #333; color: white; padding: 10px;
+            background: #0d0e15; border: 1px solid #222; color: white; padding: 10px;
             border-radius: 6px; cursor: pointer; text-align: center; font-size: 11px; font-weight: bold;
+            transition: all 0.15s;
         }
-        .grid-btn:hover { background: #1e2440; border-color: #00e5ff; }
+        .grid-btn:hover { background: #1c1e2e; border-color: #ff4757; transform: translateY(-2px); }
         .close-btn { background: #d63031; border: none; color: white; padding: 3px 8px; border-radius: 4px; cursor: pointer; float: right; }
 
         canvas {
-            border: 2px solid #1f1f3a; border-radius: 4px;
-            background: #05050a; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            border: 2px solid #1c1c24; border-radius: 6px;
+            background: #020204; box-shadow: 0 15px 40px rgba(0,0,0,0.9);
         }
         #domain-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 2; display: none;
-            box-shadow: inset 0 0 100px rgba(0,0,0,1);
+            box-shadow: inset 0 0 150px rgba(0,0,0,1);
         }
-        #controls-legend { margin-top: 10px; color: #747d8c; font-size: 12px; text-align: center; line-height: 1.4; }
-        .hl { color: #00e5ff; font-weight: bold; }
+        #controls-legend { margin-top: 10px; color: #a4b0be; font-size: 12px; text-align: center; line-height: 1.4; }
+        .hl { color: #ff4757; font-weight: bold; }
 
         #clash-ui {
             position: absolute; display: none; font-weight: bold; text-align: center;
-            font-size: 24px; color: #ff3f34; z-index: 20; pointer-events: none;
-            text-shadow: 0 0 10px rgba(255,63,52,0.8);
+            font-size: 26px; color: #ff3f34; z-index: 20; pointer-events: none;
+            text-shadow: 0 0 15px rgba(255,63,52,0.9);
+            animation: pulse 0.1s infinite alternate;
         }
+        @keyframes pulse { from { transform: scale(0.98); } to { transform: scale(1.02); } }
+
         #defeat-screen {
-            position: absolute; display: none; background: rgba(5,5,10,0.95);
+            position: absolute; display: none; background: rgba(4,4,6,0.98);
             border: 2px solid #ff4757; border-radius: 10px; padding: 30px; text-align: center; z-index: 30;
+            box-shadow: 0 0 40px rgba(255,71,87,0.6);
         }
     </style>
 </head>
 <body>
 
     <div id="domain-overlay"></div>
-    <div id="clash-ui">MASH CLICK / LEFT MOUSE or 3! <br><span id="clash-counter" style="color:#00e5ff; font-size:36px;">0 / 35</span></div>
+    <div id="clash-ui">MASH LEFT CLICK / KEY '3'! <br><span id="clash-counter" style="color:#00ffff; font-size:40px;">0 / 35</span></div>
 
     <div id="defeat-screen">
-        <h2 style="color:#ff4757; font-size:28px; margin-top:0;">YOU DIED 3 TIMES</h2>
-        <p style="color:#ccc;">The 1v1 dummy has overwhelmed your cursed energy.</p>
+        <h2 style="color:#ff4757; font-size:32px; margin-top:0; letter-spacing: 2px;">YOU WERE EXTERMINATED</h2>
+        <p style="color:#a4b0be;">Your standard of Jujutsu was insufficient.</p>
         <button style="background:#2ed573; border-color:#26af5f;" onclick="resetOneVsOneMode()">Rematch Dummy</button>
         <button style="background:#ff4757; border-color:#ff6b81;" onclick="exitToLobby()">Return to Lobby</button>
     </div>
 
     <div id="ui-container">
         <div class="hud-panel" id="player-hud">
-            <div><strong id="char-display">CHARACTER: Mahito</strong></div>
+            <div><strong id="char-display" style="letter-spacing:1px; color:#ff4757;">CHARACTER: Gojo</strong></div>
             <div class="bar-bg"><div id="hp-bar" class="hp-fill"></div></div>
             <div class="bar-bg"><div id="ce-bar" class="ce-fill"></div></div>
             <div style="margin-top:5px; font-size:13px;">💰 Coins: <span id="coin-count" style="color:#ffd700;font-weight:bold;">100</span> | Lives left: <span id="lives-count" style="color:#ff4757; font-weight:bold;">N/A</span></div>
@@ -95,8 +101,8 @@
             <button class="mode-btn" id="mode-toggle" onclick="toggleGameMode()">ENTER 1v1 ARENA</button>
         </div>
 
-        <div class="hud-panel" style="text-align: right;">
-            <div><strong id="mode-title">Shibuya Battle Royale</strong></div>
+        <div class="hud-panel" style="text-align: right; border-color:#00d2d3; box-shadow: 0 0 20px rgba(0,210,211,0.2);">
+            <div><strong id="mode-title" style="color:#00d2d3;">Shibuya Battle Royale</strong></div>
             <div style="font-size:12px; color:#aaa; margin-top:5px;">Weapon Slot: <span id="weapon-display" style="color:#00ffcc;">None</span></div>
             <div style="font-size:11px; color:#ff7675; margin-top:3px;" id="bf-status">STREAK: 0 | READY</div>
         </div>
@@ -104,42 +110,119 @@
 
     <div id="char-modal" class="modal">
         <button class="close-btn" onclick="toggleModal('char-modal')">X</button>
-        <h3>Choose Your Sorcerer / Curse</h3>
+        <h3 style="color:#ff4757; margin-top:0;">Select Sorcerer / Curse Archetype</h3>
         <div class="grid">
+            <div class="grid-btn" onclick="selectCharacter('gojo')">Satoru Gojo<br><span style="color:#00a8ff;font-size:9px;">DE: Unlimited Void</span></div>
+            <div class="grid-btn" onclick="selectCharacter('sukuna')">Ryomen Sukuna<br><span style="color:#e84118;font-size:9px;">DE: Malevolent Shrine</span></div>
+            <div class="grid-btn" onclick="selectCharacter('yuji')">Yuji Itadori<br><span style="color:#ff9f43;font-size:9px;">ULT: 4x Black Flash Rush</span></div>
+            <div class="grid-btn" onclick="selectCharacter('megumi')">Megumi Fushiguro<br><span style="color:#22a6b3;font-size:9px;">ULT: Eight-Handled Sword Mahoraga</span></div>
             <div class="grid-btn" onclick="selectCharacter('mahito')">Mahito<br><span style="color:#9b59b6;font-size:9px;">DE: Self-Embodiment</span></div>
-            <div class="grid-btn" onclick="selectCharacter('naoya')">Naoya Zenin<br><span style="color:#f1c40f;font-size:9px;">ULT: Projection Speed Blitz</span></div>
+            <div class="grid-btn" onclick="selectCharacter('naoya')">Naoya Zenin<br><span style="color:#f1c40f;font-size:9px;">ULT: Projection Blitz</span></div>
             <div class="grid-btn" onclick="selectCharacter('hakari')">Kinji Hakari<br><span style="color:#2ecc71;font-size:9px;">DE: Idle Death Gamble</span></div>
-            <div class="grid-btn" onclick="selectCharacter('choso')">Choso<br><span style="color:#e74c3c;font-size:9px;">ULT: Supernova Stream</span></div>
+            <div class="grid-btn" onclick="selectCharacter('choso')">Choso<br><span style="color:#c0392b;font-size:9px;">ULT: Supernova Stream</span></div>
             <div class="grid-btn" onclick="selectCharacter('todo')">Aoi Todo<br><span style="color:#34495e;font-size:9px;">ULT: Boogie Woogie Swap</span></div>
             <div class="grid-btn" onclick="selectCharacter('higuruma')">Hiromi Higuruma<br><span style="color:#95a5a6;font-size:9px;">DE: Deadly Sentencing</span></div>
-            <div class="grid-btn" onclick="selectCharacter('yuta')">Yuta Okkotsu<br><span style="color:#ecf0f1;font-size:9px;">DE: Authentic Mutual Love</span></div>
-            <div class="grid-btn" onclick="selectCharacter('nanami')">Kento Nanami<br><span style="color:#f39c12;font-size:9px;">ULT: 7:3 Ratio Collapse</span></div>
+            <div class="grid-btn" onclick="selectCharacter('yuta')">Yuta Okkotsu<br><span style="color:#ecf0f1;font-size:9px;">DE: Mutual Love</span></div>
+            <div class="grid-btn" onclick="selectCharacter('nanami')">Kento Nanami<br><span style="color:#f39c12;font-size:9px;">ULT: 7:3 Ratio Snap</span></div>
             <div class="grid-btn" onclick="selectCharacter('mechamaru')">Mechamaru<br><span style="color:#7f8c8d;font-size:9px;">ULT: Albatross Cannon</span></div>
             <div class="grid-btn" onclick="selectCharacter('hanami')">Hanami<br><span style="color:#27ae60;font-size:9px;">DE: Feast of Blessings</span></div>
             <div class="grid-btn" onclick="selectCharacter('locust')">Locust Guy<br><span style="color:#16a085;font-size:9px;">ULT: Hexapod Frenzy</span></div>
             <div class="grid-btn" onclick="selectCharacter('yuki')">Yuki Tsukumo<br><span style="color:#e67e22;font-size:9px;">ULT: Star Rage Density</span></div>
             <div class="grid-btn" onclick="selectCharacter('haruta')">Haruta Shigemo<br><span style="color:#e84393;font-size:9px;">ULT: Miracle Contingency</span></div>
-            <div class="grid-btn" onclick="selectCharacter('meimei')">Mei Mei<br><span style="color:#00a8ff;font-size:9px;">ULT: Bird Strike Kamikaze</span></div>
+            <div class="grid-btn" onclick="selectCharacter('meimei')">Mei Mei<br><span style="color:#00a8ff;font-size:9px;">ULT: Bird Strike</span></div>
         </div>
     </div>
 
     <div id="shop-modal" class="modal">
         <button class="close-btn" onclick="toggleModal('shop-modal')">X</button>
         <h3>Shibuya Vending Machine</h3>
-        <div class="grid">
+        <div class="grid" style="grid-template-columns: repeat(2, 160px);">
             <div class="grid-btn" onclick="buySoda()">Buy Cold Soda<br><span style="color:#2ecc71;">5 Coins (+25 HP)</span></div>
-            <div class="grid-btn" onclick="rollWeapon()">Random Cursed Weapon Gacha<br><span style="color:#e74c3c;">10 Coins</span></div>
+            <div class="grid-btn" onclick="rollWeapon()">Cursed Weapon Gacha<br><span style="color:#e74c3c;">10 Coins</span></div>
         </div>
     </div>
 
     <canvas id="shibuyaCanvas" width="1000" height="500"></canvas>
 
     <div id="controls-legend">
-        Move: <span class="hl">A / D</span> | Jump: <span class="hl">W</span> | Dash: <span class="hl">SHIFT</span> | Wall Run: <span class="hl">Hold A/D into structures while airborne</span><br>
-        Basic M1: <span class="hl">Left Click</span> | Reversal Red Pull: <span class="hl">R Key</span> | Divergent Flash: <span class="hl">3 Key</span> (Hit exactly 1 second apart) | Domain Expansion: <span class="hl">Q Key</span>
+        Move: <span class="hl">A / D</span> | Jump: <span class="hl">W</span> | Dash: <span class="hl">SHIFT</span> | Wall Run: <span class="hl">Hold Direction against structures while airborne</span><br>
+        Basic M1: <span class="hl">Left Click</span> | Reversal/Shadow Pull: <span class="hl">R Key</span> | JJS Black Flash Sync: <span class="hl">3 Key</span> (Hit exactly 1 second apart) | Ultimate / Domain: <span class="hl">Q Key</span>
     </div>
 
 <script>
+// Synthesized Procedural JJS Audio Generation System
+const AudioEngine = {
+    ctx: null,
+    init() { 
+        if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); 
+    },
+    playHit() {
+        this.init(); let osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+        osc.type = 'triangle'; osc.frequency.setValueAtTime(120, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+        osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.12);
+    },
+    playPull() {
+        this.init(); let osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(80, this.ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(480, this.ctx.currentTime + 0.25);
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+        osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.25);
+    },
+    playBf() {
+        this.init();
+        let osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+        osc.type = 'square'; osc.frequency.setValueAtTime(65, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(20, this.ctx.currentTime + 0.4);
+        gain.gain.setValueAtTime(0.6, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+        osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.4);
+        
+        let osc2 = this.ctx.createOscillator(), gain2 = this.ctx.createGain();
+        osc2.type = 'sawtooth'; osc2.frequency.setValueAtTime(150, this.ctx.currentTime);
+        gain2.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain2.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+        osc2.connect(gain2); gain2.connect(this.ctx.destination); osc2.start(); osc2.stop(this.ctx.currentTime + 0.2);
+    },
+    playDomain() {
+        this.init(); let osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+        osc.type = 'sine'; osc.frequency.setValueAtTime(50, this.ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(180, this.ctx.currentTime + 0.8);
+        gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.8);
+        osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.8);
+    },
+    playWheelSpin() {
+        this.init(); let osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+        osc.type = 'sine'; osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.4);
+        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
+        osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.4);
+    },
+    playRememberSong(durationSec) {
+        this.init();
+        let startTime = this.ctx.currentTime;
+        let notes = [220, 261, 329, 392, 440, 523, 659, 783]; 
+        let noteIdx = 0;
+        
+        let interval = setInterval(() => {
+            if (this.ctx.currentTime - startTime > durationSec) { clearInterval(interval); return; }
+            let osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(notes[noteIdx % notes.length], this.ctx.currentTime);
+            gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+            osc.connect(gain); gain.connect(this.ctx.destination);
+            osc.start(); osc.stop(this.ctx.currentTime + 0.3);
+            noteIdx++;
+        }, 150);
+    }
+};
+
 const canvas = document.getElementById('shibuyaCanvas');
 const ctx = canvas.getContext('2d');
 const overlay = document.getElementById('domain-overlay');
@@ -153,13 +236,11 @@ let screenShake = 0;
 let coins = 100;
 let equippedWeapon = 'None';
 
-// Game Mode Management
-let currentGameMode = 'BR'; // 'BR' or '1V1'
+let currentGameMode = 'BR'; 
 let playerLives1v1 = 3;
 let oneVsOneWonCutscene = false;
 let cutsceneTimer = 0;
 
-// Domain System Globals
 let domainActive = false;
 let domainColor = '';
 let currentDomainOwner = null;
@@ -170,7 +251,6 @@ let clashFighter2 = null;
 let playerClashClicks = 0;
 let aiClashClicks = 0;
 
-// Cutscene Structuring Arrays
 let slashCutsceneActive = false;
 let slashCutsceneTimer = 0;
 let slashCutsceneColor1 = '';
@@ -178,36 +258,49 @@ let slashCutsceneColor2 = '';
 let slashNameText1 = '';
 let slashNameText2 = '';
 
+// Mahoraga Entity State Data Struct
+let mahoragaActive = false;
+let mahoragaTimer = 0;
+let mahoragaX = 0;
+let mahoragaY = 0;
+let mahoragaDir = 1;
+let mahoragaTarget = null;
+let mahoragaWheelAngle = 0;
+
 const WEAPONS_GACHA = ['Slaughter Demon', 'Playful Cloud Staff', 'Inverted Spear of Heaven', 'Dragon Bone Sword'];
 
 const ROSTER = {
-    mahito: { name: "Mahito", color: "#8e44ad", isDomain: true, dmg: 16 },
-    naoya: { name: "Naoya Zenin", color: "#f1c40f", isDomain: false, dmg: 14 },
-    hakari: { name: "Kinji Hakari", color: "#2ecc71", isDomain: true, dmg: 15 },
-    choso: { name: "Choso", color: "#c0392b", isDomain: false, dmg: 17 },
-    todo: { name: "Aoi Todo", color: "#34495e", isDomain: false, dmg: 13 },
-    higuruma: { name: "Hiromi Higuruma", color: "#7f8c8d", isDomain: true, dmg: 12 },
-    yuta: { name: "Yuta Okkotsu", color: "#dff9fb", isDomain: true, dmg: 18 },
-    nanami: { name: "Kento Nanami", color: "#f39c12", isDomain: false, dmg: 20 },
-    mechamaru: { name: "Mechamaru", color: "#95a5a6", isDomain: false, dmg: 19 },
-    hanami: { name: "Hanami", color: "#27ae60", isDomain: true, dmg: 16 },
-    locust: { name: "Locust Guy", color: "#16a085", isDomain: false, dmg: 14 },
-    yuki: { name: "Yuki Tsukumo", color: "#e67e22", isDomain: false, dmg: 24 },
-    haruta: { name: "Haruta Shigemo", color: "#e84393", isDomain: false, dmg: 11 },
-    meimei: { name: "Mei Mei", color: "#00a8ff", isDomain: false, dmg: 21 }
+    gojo: { name: "Satoru Gojo", color: "#00a8ff", isDomain: true, dmg: 22, desc: "Blue Pull & Limitless M1" },
+    sukuna: { name: "Ryomen Sukuna", color: "#e84118", isDomain: true, dmg: 25, desc: "Dismantle Sweep & Cleave" },
+    yuji: { name: "Yuji Itadori", color: "#ff9f43", isDomain: false, dmg: 19, desc: "Instant Black Flash Rush" },
+    megumi: { name: "Megumi Fushiguro", color: "#22a6b3", isDomain: false, dmg: 17, desc: "Shadow Grab & Mahoraga Summon" },
+    mahito: { name: "Mahito", color: "#8e44ad", isDomain: true, dmg: 16, desc: "Idle Transfiguration Slash" },
+    naoya: { name: "Naoya Zenin", color: "#f1c40f", isDomain: false, dmg: 14, desc: "Projection Blitz Dash" },
+    hakari: { name: "Kinji Hakari", color: "#2ecc71", isDomain: true, dmg: 15, desc: "Jackpot Mode Regeneration" },
+    choso: { name: "Choso", color: "#c0392b", isDomain: false, dmg: 17, desc: "Supernova Piercing Blood" },
+    todo: { name: "Aoi Todo", color: "#34495e", isDomain: false, dmg: 13, desc: "Boogie Woogie Placement" },
+    higuruma: { name: "Hiromi Higuruma", color: "#7f8c8d", isDomain: true, dmg: 12, desc: "Executioner Sword Proximity" },
+    yuta: { name: "Yuta Okkotsu", color: "#dff9fb", isDomain: true, dmg: 18, desc: "Rika Manifestation Sweep" },
+    nanami: { name: "Kento Nanami", color: "#f39c12", isDomain: false, dmg: 20, desc: "7:3 Critical Collapse Line" },
+    mechamaru: { name: "Mechamaru", color: "#95a5a6", isDomain: false, dmg: 19, desc: "Albatross Ultimate Beam" },
+    hanami: { name: "Hanami", color: "#27ae60", isDomain: true, dmg: 16, desc: "Roots Snare Eruption" },
+    locust: { name: "Locust Guy", color: "#16a085", isDomain: false, dmg: 14, desc: "Hexapod Fast Barrage" },
+    yuki: { name: "Yuki Tsukumo", color: "#e67e22", isDomain: false, dmg: 24, desc: "Star Rage Impact Density" },
+    haruta: { name: "Haruta Shigemo", color: "#e84393", isDomain: false, dmg: 11, desc: "Miracle Save Contingency" },
+    meimei: { name: "Mei Mei", color: "#00a8ff", isDomain: false, dmg: 21, desc: "Bird Strike Kamikaze Rush" }
 };
 
 const PLATFORMS = [
     { x: 0, y: 450, w: 2500, h: 50, type: 'street' },        
-    { x: 300, y: 330, w: 400, h: 20, type: 'subway_deck' },  
-    { x: 850, y: 220, w: 350, h: 20, type: 'subway_deck' },  
-    { x: 1300, y: 310, w: 500, h: 20, type: 'stairwell' }   
+    { x: 250, y: 330, w: 450, h: 20, type: 'subway_deck' },  
+    { x: 800, y: 220, w: 400, h: 20, type: 'subway_deck' },  
+    { x: 1350, y: 310, w: 550, h: 20, type: 'stairwell' }   
 ];
 
 class Actor {
-    constructor(x, y, color, isAi = false, charType = 'mahito') {
+    constructor(x, y, color, isAi = false, charType = 'gojo') {
         this.x = x; this.y = y; this.vx = 0; this.vy = 0;
-        this.width = 30; this.height = 60;
+        this.width = 32; this.height = 64;
         this.color = color; this.isAi = isAi; this.charType = charType;
         this.health = 100; this.energy = 50;
         this.direction = 1; this.state = 'idle'; this.stateTimer = 0;
@@ -215,15 +308,23 @@ class Actor {
         this.lastDivergentTime = 0;
         this.bfStreak = 0;
         this.divergentCooldown = false;
+        this.trail = [];
     }
 
     update() {
         if (isClashing || slashCutsceneActive || oneVsOneWonCutscene) return;
 
         if (!this.isGrounded) this.vy += GRAVITY;
-        this.vx *= 0.82;
+        this.vx *= 0.84;
         this.x += this.vx; this.y += this.vy;
         this.isGrounded = false;
+
+        if (Math.abs(this.vx) > 8) {
+            this.trail.push({x: this.x, y: this.y});
+            if(this.trail.length > 5) this.trail.shift();
+        } else {
+            this.trail.shift();
+        }
 
         PLATFORMS.forEach(plat => {
             if (this.x + this.width > plat.x && this.x < plat.x + plat.w &&
@@ -250,40 +351,31 @@ class Actor {
     processAiLogic() {
         let potentialTargets = [];
         if (player.health > 0) potentialTargets.push(player);
-        
-        // Only target other AIs in Battle Royale Mode
         if (currentGameMode === 'BR') {
             activeAis.forEach(ai => { if (ai !== this && ai.health > 0) potentialTargets.push(ai); });
         }
-        
         if (potentialTargets.length === 0) return;
 
         let closestTarget = null;
         let shortestDistance = Infinity;
         potentialTargets.forEach(target => {
             let distance = Math.abs(target.x - this.x);
-            if (distance < shortestDistance) {
-                shortestDistance = distance;
-                closestTarget = target;
-            }
+            if (distance < shortestDistance) { shortestDistance = distance; closestTarget = target; }
         });
 
         if (!closestTarget) return;
         let dist = closestTarget.x - this.x;
         this.direction = dist > 0 ? 1 : -1;
 
-        if (Math.abs(dist) > 55) {
-            this.vx = this.direction * (currentGameMode === '1V1' ? 3.8 : 3.2); // Dummy maps slightly faster
-            if (Math.random() < 0.015 && this.isGrounded) {
-                this.vy = -10;
-                this.isGrounded = false;
-            }
+        if (Math.abs(dist) > 60) {
+            this.vx = this.direction * (currentGameMode === '1V1' ? 4.2 : 3.5);
+            if (Math.random() < 0.02 && this.isGrounded) { this.vy = -11; this.isGrounded = false; }
         } else {
             let decision = Math.random();
-            if (decision < 0.05) this.attackM1();
-            else if (decision < 0.06) this.executeRSpecial();
+            if (decision < 0.06) this.attackM1();
+            else if (decision < 0.07) this.executeRSpecial();
             
-            if (decision < 0.008 && this.energy >= 100 && ROSTER[this.charType].isDomain) {
+            if (decision < 0.012 && this.energy >= 100) {
                 this.executeUltimateOrDomain();
             }
         }
@@ -291,28 +383,30 @@ class Actor {
 
     attackM1() {
         if (this.state !== 'idle') return;
-        this.state = 'attacking'; this.stateTimer = 15;
-        let range = 50;
-        let damage = ROSTER[this.charType]?.dmg || 15;
+        this.state = 'attacking'; this.stateTimer = 14;
+        let range = 55;
+        let damage = ROSTER[this.charType]?.dmg || 16;
 
         if (!this.isAi) {
             if (equippedWeapon === 'Slaughter Demon') damage += 5;
-            if (equippedWeapon === 'Playful Cloud Staff') { damage += 12; range = 70; }
+            if (equippedWeapon === 'Playful Cloud Staff') { damage += 12; range = 75; }
             if (equippedWeapon === 'Inverted Spear of Heaven') damage += 16;
-            if (equippedWeapon === 'Dragon Bone Sword') { damage += 22; range = 85; }
+            if (equippedWeapon === 'Dragon Bone Sword') { damage += 22; range = 90; }
         }
 
+        AudioEngine.playHit();
         let hX = this.direction === 1 ? this.x + this.width : this.x - range;
-        executeHitboxSweep(this, hX, this.y + 10, range, 40, damage, this.direction * 10, -3, false);
+        executeHitboxSweep(this, hX, this.y + 10, range, 40, damage, this.direction * 11, -2.5, false);
     }
 
     executeRSpecial() {
         if (this.state !== 'idle') return;
-        this.state = 'attacking'; this.stateTimer = 25;
-        let range = 200;
+        this.state = 'attacking'; this.stateTimer = 22;
+        AudioEngine.playPull();
+        let range = 240;
         let hX = this.direction === 1 ? this.x + this.width : this.x - range;
-        executeHitboxSweep(this, hX, this.y - 10, range, 70, 10, 0, 0, true);
-        createParticles(this.x + (this.direction * 60), this.y + 20, '#ff3838', 15);
+        executeHitboxSweep(this, hX, this.y - 10, range, 70, 12, 0, 0, true);
+        createParticles(this.x + (this.direction * 75), this.y + 20, (this.charType === 'gojo' ? '#00a8ff' : (this.charType === 'megumi' ? '#10ac84' : '#ff4757')), 20);
     }
 
     handleDivergentFistInput() {
@@ -321,28 +415,37 @@ class Actor {
         let timeDiff = (now - this.lastDivergentTime) / 1000;
         this.lastDivergentTime = now;
 
+        let dynamicSuccessWindow = (this.charType === 'yuji' || (timeDiff >= 0.8 && timeDiff <= 1.2));
+
         if (this.state === 'idle') {
-            this.state = 'attacking'; this.stateTimer = 15;
-            let range = 60;
+            this.state = 'attacking'; this.stateTimer = 14;
+            let range = 65;
             let hX = this.direction === 1 ? this.x + this.width : this.x - range;
-            executeHitboxSweep(this, hX, this.y + 10, range, 45, 12, this.direction * 5, -2, false);
-            createParticles(hX + range/2, this.y + 20, '#00bcff', 8);
+            executeHitboxSweep(this, hX, this.y + 10, range, 45, 14, this.direction * 6, -2, false);
+            createParticles(hX + range/2, this.y + 20, '#00ffff', 10);
+            AudioEngine.playHit();
             if (!this.isAi) document.getElementById('bf-status').innerText = `CHAIN STATUS: PRIMED...`;
             return;
         }
 
-        if (timeDiff >= 0.8 && timeDiff <= 1.2) {
+        if (dynamicSuccessWindow) {
             this.bfStreak++;
-            screenShake = 15;
+            screenShake = 20;
+            AudioEngine.playBf();
+
+            if(this.charType === 'gojo') { AudioEngine.playRememberSong(1.5); }
+
             if (this.bfStreak >= 4) {
                 this.triggerSuperBlackFlash();
             } else {
-                this.state = 'attacking'; this.stateTimer = 15;
-                let range = 75;
+                this.state = 'attacking'; this.stateTimer = 16;
+                let range = 85;
                 let hX = this.direction === 1 ? this.x + this.width : this.x - range;
-                executeHitboxSweep(this, hX, this.y, range, 50, 30, this.direction * 20, -8, false);
-                createParticles(hX + range/2, this.y + 20, '#ff0044', 25);
-                if (!this.isAi) document.getElementById('bf-status').innerText = `STREAK: ${this.bfStreak} | BLACK FLASH!`;
+                executeHitboxSweep(this, hX, this.y, range, 50, 35, this.direction * 22, -9, false);
+                
+                createParticles(hX + range/2, this.y + 20, '#ff003c', 35);
+                createParticles(hX + range/2, this.y + 20, '#000000', 20);
+                if (!this.isAi) document.getElementById('bf-status').innerText = `STREAK: ${this.bfStreak} | BLACK FLASH Spark!`;
             }
         } else {
             this.forceDivergentCooldown();
@@ -351,15 +454,21 @@ class Actor {
 
     triggerSuperBlackFlash() {
         this.bfStreak = 0;
-        this.state = 'attacking'; this.stateTimer = 35;
-        screenShake = 40;
-        let range = 180;
+        this.state = 'attacking'; this.stateTimer = 40;
+        screenShake = 45;
+        AudioEngine.playBf();
+        if(this.charType === 'gojo') { AudioEngine.playRememberSong(3.0); }
+
+        let range = 210;
         let hX = this.direction === 1 ? this.x + this.width : this.x - range;
-        executeHitboxSweep(this, hX, this.y - 30, range, 100, 65, this.direction * 45, -15, false);
-        createParticles(this.x, this.y, '#ff003c', 60);
-        createParticles(this.x, this.y, '#000000', 40);
+        executeHitboxSweep(this, hX, this.y - 40, range, 110, 75, this.direction * 50, -16, false);
+        
+        createParticles(this.x, this.y, '#ff003c', 80);
+        createParticles(this.x, this.y, '#000000', 60);
+        createParticles(this.x, this.y, '#ffffff', 30);
+
         this.divergentCooldown = true;
-        if (!this.isAi) document.getElementById('bf-status').innerText = `SUPER FLASH OVERHEAT!`;
+        if (!this.isAi) document.getElementById('bf-status').innerText = `CRITICAL OVERHEAT!`;
         setTimeout(() => {
             this.divergentCooldown = false;
             if (!this.isAi) document.getElementById('bf-status').innerText = `STREAK: 0 | READY`;
@@ -369,7 +478,7 @@ class Actor {
     forceDivergentCooldown() {
         this.bfStreak = 0;
         this.divergentCooldown = true;
-        if (!this.isAi) document.getElementById('bf-status').innerText = `MISSED WINDOW! COOLDOWN`;
+        if (!this.isAi) document.getElementById('bf-status').innerText = `MISSED WINDOW! SLOWDOWN`;
         setTimeout(() => {
             this.divergentCooldown = false;
             if (!this.isAi) document.getElementById('bf-status').innerText = `STREAK: 0 | READY`;
@@ -381,21 +490,41 @@ class Actor {
         this.energy = 0;
         let data = ROSTER[this.charType];
 
+        // Unique Execution Route: Megumi Fushiguro Mahoraga Untamed Summon Strategy
+        if (this.charType === 'megumi') {
+            screenShake = 40;
+            AudioEngine.playDomain();
+            triggerJjsSlashCutscene(this.color, "MEGUMI: WITH THIS TREASURE I SUMMON...");
+            
+            setTimeout(() => {
+                mahoragaActive = true;
+                mahoragaTimer = 450; // ~7.5 seconds of rampage duration
+                mahoragaX = this.x;
+                mahoragaY = this.y - 40;
+                mahoragaWheelAngle = 0;
+                AudioEngine.playWheelSpin();
+                createParticles(mahoragaX, mahoragaY, '#ffffff', 50);
+                createParticles(mahoragaX, mahoragaY, '#10ac84', 30);
+            }, 800);
+            return;
+        }
+
         if (data.isDomain) {
             if (domainActive || slashCutsceneActive) {
                 initiateDomainClash(currentDomainOwner ? currentDomainOwner : activeAis[0], this);
             } else {
                 currentDomainOwner = this;
+                AudioEngine.playDomain();
                 triggerJjsSlashCutscene(this.color, ROSTER[this.charType].name);
                 
                 setTimeout(() => {
                     domainActive = true;
                     domainColor = this.color;
                     overlay.style.display = 'block';
-                    overlay.style.background = `radial-gradient(circle, transparent 30%, ${this.color} 90%)`;
+                    overlay.style.background = `radial-gradient(circle, transparent 20%, ${this.color} 95%)`;
                     
                     teleportAllToDomain(this.x);
-                    executeHitboxSweep(this, this.x - 400, this.y - 200, 900, 500, 45, this.direction * 5, -8, false);
+                    executeHitboxSweep(this, this.x - 500, this.y - 250, 1100, 600, 50, this.direction * 6, -9, false);
                 }, 800);
 
                 setTimeout(() => {
@@ -407,70 +536,82 @@ class Actor {
                 }, 6000);
             }
         } else {
-            screenShake = 25;
-            let range = 250;
+            screenShake = 30;
+            AudioEngine.playBf();
+            let range = 280;
             let hX = this.direction === 1 ? this.x + this.width : this.x - range;
-            executeHitboxSweep(this, hX, this.y - 50, range, 120, 50, this.direction * 32, -11, false);
-            createParticles(this.x + (this.direction * 100), this.y, this.color, 45);
+            executeHitboxSweep(this, hX, this.y - 60, range, 140, 55, this.direction * 35, -12, false);
+            createParticles(this.x + (this.direction * 120), this.y, this.color, 60);
         }
     }
 
     damage(amt, kx, ky) {
         this.health = Math.max(0, this.health - amt);
         this.vx = kx; this.vy = ky;
-        this.state = 'hitstun'; this.stateTimer = 22;
-        if (!this.isAi) this.energy = Math.min(100, this.energy + amt * 0.7);
+        this.state = 'hitstun'; this.stateTimer = 24;
+        if (!this.isAi) this.energy = Math.min(100, this.energy + amt * 0.75);
     }
 
     draw() {
         if (this.health <= 0) return; 
-        ctx.fillStyle = this.state === 'hitstun' ? '#7f8c8d' : this.color;
+
+        this.trail.forEach((pos, i) => {
+            ctx.fillStyle = this.color;
+            ctx.globalAlpha = (i + 1) * 0.12;
+            ctx.fillRect(pos.x - cameraX, pos.y, this.width, this.height);
+        });
+        ctx.globalAlpha = 1.0;
+
+        ctx.fillStyle = this.state === 'hitstun' ? '#57606f' : this.color;
         ctx.fillRect(this.x - cameraX, this.y, this.width, this.height);
 
         ctx.fillStyle = '#fff';
+        if(this.charType === 'gojo') ctx.fillStyle = '#00ffff'; 
+        if(this.charType === 'sukuna') ctx.fillStyle = '#ff3f34'; 
+        if(this.charType === 'megumi') ctx.fillStyle = '#55efc4';
+        
         let eyeX = this.direction === 1 ? this.x + this.width - 6 : this.x + 2;
-        ctx.fillRect(eyeX - cameraX, this.y + 12, 4, 4);
+        ctx.fillRect(eyeX - cameraX, this.y + 12, 5, 5);
     }
 }
 
 class Particle {
     constructor(x, y, vx, vy, color) {
         this.x = x; this.y = y; this.vx = vx; this.vy = vy;
-        this.color = color; this.life = Math.random()*20 + 15; this.maxLife = this.life;
+        this.color = color; this.life = Math.random()*25 + 20; this.maxLife = this.life;
     }
     update() { this.x += this.vx; this.y += this.vy; this.life--; }
     draw() {
         ctx.fillStyle = this.color;
         ctx.globalAlpha = this.life / this.maxLife;
-        ctx.fillRect(this.x - cameraX, this.y, 4, 4);
+        ctx.fillRect(this.x - cameraX, this.y, 5, 5);
         ctx.globalAlpha = 1.0;
     }
 }
 
-// Global Objects
-const player = new Actor(150, 300, '#8e44ad', false, 'mahito');
+const player = new Actor(150, 300, '#00a8ff', false, 'gojo');
 let activeAis = [];
 let particles = [];
 const keys = {};
 
 function spawnThreatAis() {
     activeAis = [
-        new Actor(600, 200, '#f1c40f', true, 'naoya'),
-        new Actor(950, 100, '#2ecc71', true, 'hakari'),
-        new Actor(1400, 200, '#c0392b', true, 'choso'),
-        new Actor(1800, 300, '#27ae60', true, 'hanami')
+        new Actor(550, 200, '#e84118', true, 'sukuna'),
+        new Actor(900, 100, '#ff9f43', true, 'yuji'),
+        new Actor(1300, 200, '#22a6b3', true, 'megumi'),
+        new Actor(1700, 300, '#8e44ad', true, 'mahito')
     ];
 }
 
 function createParticles(x, y, color, count) {
     for(let i=0; i<count; i++) {
-        particles.push(new Particle(x, y, (Math.random()-0.5)*14, (Math.random()-0.5)*14, color));
+        particles.push(new Particle(x, y, (Math.random()-0.5)*16, (Math.random()-0.5)*16, color));
     }
 }
 
 function triggerJjsSlashCutscene(color1, name1, color2 = '', name2 = '') {
     slashCutsceneActive = true;
-    slashCutsceneTimer = 48;
+    slashCutsceneTimer = 52;
     slashCutsceneColor1 = color1;
     slashCutsceneColor2 = color2;
     slashNameText1 = name1.toUpperCase();
@@ -480,9 +621,9 @@ function triggerJjsSlashCutscene(color1, name1, color2 = '', name2 = '') {
 function teleportAllToDomain(centerPositionX) {
     let entities = [player, ...activeAis];
     entities.forEach(ent => {
-        if (Math.abs(ent.x - centerPositionX) < 450) {
-            ent.x = centerPositionX + (Math.random() * 120 - 60);
-            createParticles(ent.x, ent.y, '#fff', 8);
+        if (Math.abs(ent.x - centerPositionX) < 500) {
+            ent.x = centerPositionX + (Math.random() * 160 - 80);
+            createParticles(ent.x, ent.y, '#ffffff', 12);
         }
     });
 }
@@ -493,11 +634,12 @@ function initiateDomainClash(fighter1, fighter2) {
     clashFighter2 = fighter2;
     playerClashClicks = 0;
     aiClashClicks = 0;
+    AudioEngine.playBf();
     triggerJjsSlashCutscene(fighter1.color, ROSTER[fighter1.charType].name, fighter2.color, ROSTER[fighter2.charType].name);
 
     if (!fighter1.isAi || !fighter2.isAi) {
         clashUi.style.display = 'block';
-        clashUi.style.left = (window.innerWidth / 2 - 120) + 'px';
+        clashUi.style.left = (window.innerWidth / 2 - 130) + 'px';
         clashUi.style.top = (window.innerHeight / 2 - 160) + 'px';
         clashCounter.innerText = "0 / 35";
     }
@@ -506,6 +648,7 @@ function initiateDomainClash(fighter1, fighter2) {
 function handleClashClickRegistration() {
     if (!isClashing) return;
     playerClashClicks++;
+    AudioEngine.playHit();
     clashCounter.innerText = `${playerClashClicks} / 35`;
     if (playerClashClicks >= 35) {
         resolveClashWinner(!clashFighter1.isAi ? clashFighter1 : clashFighter2, !clashFighter1.isAi ? clashFighter2 : clashFighter1);
@@ -516,17 +659,18 @@ function resolveClashWinner(winner, loser) {
     isClashing = false;
     slashCutsceneActive = false;
     clashUi.style.display = 'none';
-    screenShake = 35;
-    loser.damage(55, winner.direction * 25, -12);
+    screenShake = 45;
+    AudioEngine.playBf();
+    loser.damage(60, winner.direction * 28, -13);
 
     currentDomainOwner = winner;
     domainActive = true;
     domainColor = winner.color;
     overlay.style.display = 'block';
-    overlay.style.background = `radial-gradient(circle, transparent 30%, ${winner.color} 90%)`;
+    overlay.style.background = `radial-gradient(circle, transparent 20%, ${winner.color} 95%)`;
 
     teleportAllToDomain(winner.x);
-    createParticles(winner.x, winner.y, winner.color, 50);
+    createParticles(winner.x, winner.y, winner.color, 75);
 
     setTimeout(() => {
         if (currentDomainOwner === winner) {
@@ -539,8 +683,8 @@ function resolveClashWinner(winner, loser) {
 
 function executeHitboxSweep(attacker, hx, hy, hw, hh, dmg, kx, ky, isPullMove = false) {
     let targets = [player, ...activeAis];
-    if (!attacker.isAi) {
-        ctx.fillStyle = isPullMove ? 'rgba(0, 229, 255, 0.3)' : 'rgba(255, 0, 52, 0.25)';
+    if (attacker && !attacker.isAi) {
+        ctx.fillStyle = isPullMove ? 'rgba(0, 168, 255, 0.35)' : 'rgba(255, 0, 60, 0.3)';
         ctx.fillRect(hx - cameraX, hy, hw, hh);
     }
 
@@ -550,44 +694,50 @@ function executeHitboxSweep(attacker, hx, hy, hw, hh, dmg, kx, ky, isPullMove = 
             hy < t.y + t.height && hy + hh > t.y) {
             
             if (isPullMove) {
-                t.x = attacker.direction === 1 ? attacker.x + attacker.width + 10 : attacker.x - t.width - 10;
+                t.x = attacker.direction === 1 ? attacker.x + attacker.width + 12 : attacker.x - t.width - 12;
                 t.y = attacker.y;
                 setTimeout(() => {
-                    t.damage(22, attacker.direction * 15, -6);
-                    createParticles(t.x, t.y + 20, '#ff003c', 20);
-                    screenShake = 12;
+                    t.damage(25, attacker.direction * 16, -6);
+                    createParticles(t.x, t.y + 20, '#ff003c', 25);
+                    screenShake = 15;
                 }, 100);
             } else {
                 t.damage(dmg, kx, ky);
-                createParticles(t.x + 15, t.y + 30, '#fff', 5);
+                createParticles(t.x + 16, t.y + 32, '#ffffff', 8);
             }
-            if (!attacker.isAi) coins += 8; 
+            if (attacker && !attacker.isAi) coins += 8; 
         }
     });
 }
 
-// 1v1 Arena Core Custom Routing
+// Separate Hitbox System for Untamed Summon Entities (Mahoraga Neutral Damage Sweeps)
+function executeMahoragaHitboxSweep(hx, hy, hw, hh, dmg, kx, ky) {
+    let targets = [player, ...activeAis];
+    targets.forEach(t => {
+        if (t && t.health > 0 && hx < t.x + t.width && hx + hw > t.x && hy < t.y + t.height && hy + hh > t.y) {
+            t.damage(dmg, kx, ky);
+            createParticles(t.x + 16, t.y + 32, '#ff4d4d', 6);
+        }
+    });
+}
+
 function toggleGameMode() {
-    if (currentGameMode === 'BR') {
-        enterOneVsOneMode();
-    } else {
-        exitToLobby();
-    }
+    if (currentGameMode === 'BR') { enterOneVsOneMode(); } else { exitToLobby(); }
 }
 
 function enterOneVsOneMode() {
     currentGameMode = '1V1';
     playerLives1v1 = 3;
     oneVsOneWonCutscene = false;
+    mahoragaActive = false;
     document.getElementById('mode-toggle').innerText = "QUIT TO LOBBY";
-    document.getElementById('mode-title').innerText = "1v1 Target Practice Duels";
+    document.getElementById('mode-title').innerText = "1v1 Deathmatch Arena";
     document.getElementById('lives-count').innerText = playerLives1v1;
     
     player.x = 150; player.y = 300; player.health = 100;
     
-    // Set up single hyper-aggressive training dummy clone
-    activeAis = [new Actor(700, 300, '#757d8c', true, 'higuruma')];
-    activeAis[0].maxHealth = 130; activeAis[0].health = 130; 
+    activeAis = [new Actor(750, 300, '#e84118', true, 'sukuna')];
+    activeAis[0].maxHealth = 155; activeAis[0].health = 155; 
 }
 
 function resetOneVsOneMode() {
@@ -598,6 +748,7 @@ function resetOneVsOneMode() {
 function exitToLobby() {
     currentGameMode = 'BR';
     oneVsOneWonCutscene = false;
+    mahoragaActive = false;
     defeatScreen.style.display = 'none';
     document.getElementById('mode-toggle').innerText = "ENTER 1v1 ARENA";
     document.getElementById('mode-title').innerText = "Shibuya Battle Royale";
@@ -609,7 +760,7 @@ function exitToLobby() {
 
 function startSukunaThroneCutscene() {
     oneVsOneWonCutscene = true;
-    cutsceneTimer = 240; // ~4 Seconds frame delay loop
+    cutsceneTimer = 240; 
 }
 
 function toggleModal(id) {
@@ -624,7 +775,7 @@ function selectCharacter(key) {
     player.health = 100;
     document.getElementById('char-display').innerText = "CHARACTER: " + ROSTER[key].name;
     toggleModal('char-modal');
-    createParticles(player.x, player.y + 20, player.color, 20);
+    createParticles(player.x, player.y + 20, player.color, 25);
 }
 
 function buySoda() {
@@ -647,7 +798,6 @@ function rollWeapon() {
     }
 }
 
-// Controller Systems Interceptors
 window.addEventListener('keydown', e => {
     keys[e.key] = true;
     if (isClashing && (e.key === '3' || e.key.toLowerCase() === 'f')) { handleClashClickRegistration(); return; }
@@ -657,8 +807,8 @@ window.addEventListener('keydown', e => {
     if (e.key.toLowerCase() === 'r') player.executeRSpecial();
     if (e.key.toLowerCase() === 'q') player.executeUltimateOrDomain();
     if (e.key === 'Shift') { 
-        player.vx = player.direction * 16;
-        createParticles(player.x, player.y + 30, 'rgba(255,255,255,0.3)', 4);
+        player.vx = player.direction * 18;
+        createParticles(player.x, player.y + 32, 'rgba(255,255,255,0.4)', 6);
     }
 });
 window.addEventListener('keyup', e => { keys[e.key] = false; });
@@ -667,70 +817,64 @@ canvas.addEventListener('mousedown', () => {
     if (player.state === 'idle' && player.health > 0 && !slashCutsceneActive && !oneVsOneWonCutscene) player.attackM1(); 
 });
 
-// Main Loop Engine Layout
 function loop() {
-    // WIN CINEMATIC ENGINE: Sukuna Skull Throne Render Phase
     if (oneVsOneWonCutscene) {
         cutsceneTimer--;
-        ctx.fillStyle = '#0a0505';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#060202'; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw Abstract Procedural Bone Throne Structure
-        ctx.fillStyle = '#3a3535';
-        ctx.fillRect(400, 200, 200, 250); // Spine Pillar Base
-        ctx.fillStyle = '#2d2525';
-        // Rib Cage Wings Arch
-        for(let i = 0; i < 8; i++) {
-            ctx.fillRect(340, 220 + (i*25), 80, 10);
-            ctx.fillRect(580, 220 + (i*25), 80, 10);
-        }
-        // Skull Mount Heaps
-        ctx.fillStyle = '#e5dcd2';
-        for(let j = 0; j < 12; j++) {
-            ctx.fillRect(360 + (j*24), 410 + (Math.sin(j)*15), 20, 20);
+        for(let k=0; k<6; k++) {
+            ctx.fillStyle = 'rgba(232,65,24,0.06)';
+            ctx.beginPath(); ctx.arc(100 + (k*160), 400, 140, 0, Math.PI*2); ctx.fill();
         }
 
-        // Render Winner Character sitting directly on the peak seat layout
-        ctx.fillStyle = player.color;
-        ctx.fillRect(485, 270, 30, 60);
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(498, 280, 4, 4); // Eyes gleam sitting down
+        ctx.fillStyle = '#2d2727'; ctx.fillRect(410, 180, 180, 270); 
+        ctx.fillStyle = '#1e1919';
+        for(let i = 0; i < 10; i++) {
+            ctx.fillRect(330, 200 + (i*24), 90, 8);
+            ctx.fillRect(580, 200 + (i*24), 90, 8);
+        }
+        ctx.fillStyle = '#ebdccb';
+        for(let j = 0; j < 15; j++) {
+            ctx.fillRect(340 + (j*22), 420 + (Math.sin(j)*12), 24, 24);
+        }
 
-        // Cinematic Overlay texts
-        ctx.fillStyle = '#ff4757'; ctx.font = 'bold 36px Times New Roman';
-        ctx.fillText("VICTORY ACHIEVED", 330, 90);
-        ctx.fillStyle = '#fff'; ctx.font = '16px Arial';
-        ctx.fillText("You have ascended to the absolute peak of Jujutsu Sorcery.", 300, 135);
-        ctx.fillStyle = '#aaa';
-        ctx.fillText(`Returning to main lobbies in ${Math.ceil(cutsceneTimer/60)}s...`, 390, 480);
+        ctx.fillStyle = player.color; ctx.fillRect(485, 250, 32, 64);
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(498, 262, 5, 5); 
+
+        ctx.fillStyle = '#ff4757'; ctx.font = 'bold 38px Georgia';
+        ctx.fillText("HONORED ONE STATUS ACHIEVED", 200, 80);
+        ctx.fillStyle = '#a4b0be'; ctx.font = '15px Arial';
+        ctx.fillText("You have conquered the King of Curses and claimed the throne.", 280, 125);
+        ctx.fillStyle = '#57606f';
+        ctx.fillText(`Returning to shibuya lobbies in ${Math.ceil(cutsceneTimer/60)}s...`, 380, 480);
 
         if (cutsceneTimer <= 0) exitToLobby();
         requestAnimationFrame(loop);
         return;
     }
 
-    // JJS CINEMATIC SLASH ENGINE
     if (slashCutsceneActive) {
         slashCutsceneTimer--;
-        ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(0,0, canvas.width, canvas.height);
+        ctx.fillStyle = 'rgba(2,2,4,0.55)'; ctx.fillRect(0,0, canvas.width, canvas.height);
 
         if (slashCutsceneColor2 !== '') {
             ctx.fillStyle = slashCutsceneColor1;
-            ctx.beginPath(); ctx.moveTo(0, 100); ctx.lineTo(canvas.width, 220); ctx.lineTo(canvas.width, 140); ctx.lineTo(0, 20); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(0, 90); ctx.lineTo(canvas.width, 210); ctx.lineTo(canvas.width, 150); ctx.lineTo(0, 30); ctx.fill();
             ctx.fillStyle = slashCutsceneColor2;
-            ctx.beginPath(); ctx.moveTo(0, 240); ctx.lineTo(canvas.width, 120); ctx.lineTo(canvas.width, 200); ctx.lineTo(0, 320); ctx.fill();
-            ctx.fillStyle = '#fff'; ctx.font = 'italic bold 26px Arial';
-            ctx.fillText(slashNameText1 + "  VS  " + slashNameText2, 280, 180);
+            ctx.beginPath(); ctx.moveTo(0, 250); ctx.lineTo(canvas.width, 130); ctx.lineTo(canvas.width, 190); ctx.lineTo(0, 310); ctx.fill();
             
-            if (Math.random() < 0.38) {
+            ctx.fillStyle = '#ffffff'; ctx.font = 'italic bold 28px Arial';
+            ctx.fillText(slashNameText1 + "  ⚔️  " + slashNameText2, 290, 180);
+            
+            if (Math.random() < 0.42) {
                 aiClashClicks++;
                 if (aiClashClicks >= 35) resolveClashWinner(clashFighter1.isAi ? clashFighter1 : clashFighter2, clashFighter1.isAi ? clashFighter2 : clashFighter1);
             }
         } else {
             ctx.fillStyle = slashCutsceneColor1;
-            ctx.beginPath(); ctx.moveTo(0, 120); ctx.lineTo(canvas.width, 240); ctx.lineTo(canvas.width, 170); ctx.lineTo(0, 50); ctx.fill();
-            ctx.fillStyle = '#fff'; ctx.font = 'italic bold 28px Arial';
-            ctx.fillText(slashNameText1 + " EXPANDS DOMAIN!", 300, 160);
+            ctx.beginPath(); ctx.moveTo(0, 130); ctx.lineTo(canvas.width, 250); ctx.lineTo(canvas.width, 180); ctx.lineTo(0, 60); ctx.fill();
+            ctx.fillStyle = '#ffffff'; ctx.font = 'italic bold 24px Arial';
+            ctx.fillText(slashNameText1, 180, 160);
         }
 
         if (slashCutsceneTimer <= 0 && !isClashing) slashCutsceneActive = false;
@@ -738,19 +882,15 @@ function loop() {
         return;
     }
 
-    // RESTORED WALL RUNNING & PARKOUR INTERCEPTOR LOGIC
     if (player.state === 'idle' && player.health > 0) {
-        if (keys['a'] || keys['A']) { player.vx = -5.2; player.direction = -1; }
-        if (keys['d'] || keys['D']) { player.vx = 5.2; player.direction = 1; }
-        if ((keys['w'] || keys['W']) && player.isGrounded) { player.vy = -12; player.isGrounded = false; }
+        if (keys['a'] || keys['A']) { player.vx = -5.6; player.direction = -1; }
+        if (keys['d'] || keys['D']) { player.vx = 5.6; player.direction = 1; }
+        if ((keys['w'] || keys['W']) && player.isGrounded) { player.vy = -12.5; player.isGrounded = false; }
         
-        // Wall run action loop triggers if pressing movement against mid-air platforms
         if (!player.isGrounded && Math.abs(player.vx) > 1) {
             PLATFORMS.forEach(p => {
-                if (player.x + player.width + 5 >= p.x && player.x - 5 <= p.x + p.w && player.y > p.y - 40 && player.y < p.y + 20) {
-                    if (keys['w'] || keys['W'] || keys['a'] || keys['A'] || keys['d'] || keys['D']) { 
-                        player.vy = -4.5; // Defies gravity to run up/across vertical wall lips
-                    } 
+                if (player.x + player.width + 6 >= p.x && player.x - 6 <= p.x + p.w && player.y > p.y - 45 && player.y < p.y + 25) {
+                    if (keys['w'] || keys['W'] || keys['a'] || keys['A'] || keys['d'] || keys['D']) { player.vy = -4.8; }
                 }
             });
         }
@@ -759,7 +899,56 @@ function loop() {
     player.update();
     activeAis.forEach(ai => ai.update());
 
-    cameraX += (player.x - cameraX - canvas.width / 3) * 0.08;
+    // 4. ACCURATE JJS MAHORAGA AI ENGAGEMENT ENGINE
+    if (mahoragaActive) {
+        mahoragaTimer--;
+        
+        // Find closest target platform entity that is still alive
+        let potentialTargets = [];
+        if (player.health > 0) potentialTargets.push(player);
+        activeAis.forEach(ai => { if (ai.health > 0) potentialTargets.push(ai); });
+
+        if (potentialTargets.length > 0) {
+            let closest = potentialTargets[0];
+            let minDist = Math.abs(closest.x - mahoragaX);
+            potentialTargets.forEach(t => {
+                let d = Math.abs(t.x - mahoragaX);
+                if (d < minDist) { minDist = d; closest = t; }
+            });
+
+            mahoragaTarget = closest;
+            let targetDistX = mahoragaTarget.x - mahoragaX;
+            mahoragaDir = targetDistX > 0 ? 1 : -1;
+
+            // Tracking velocity management
+            if (Math.abs(targetDistX) > 40) {
+                mahoragaX += mahoragaDir * 4.8;
+            }
+
+            // Ground snapping simulation layout
+            mahoragaY = 380; 
+
+            // Sword of Extermination Cleave Sweep Triggering
+            if (Math.abs(targetDistX) <= 80 && mahoragaTimer % 25 === 0) {
+                screenShake = 15;
+                AudioEngine.playHit();
+                let swX = mahoragaDir === 1 ? mahoragaX + 45 : mahoragaX - 110;
+                executeMahoragaHitboxSweep(swX, mahoragaY, 110, 80, 26, mahoragaDir * 18, -6);
+                
+                // Spin adaptation wheel overlay logic
+                mahoragaWheelAngle += Math.PI / 2;
+                AudioEngine.playWheelSpin();
+                createParticles(mahoragaX + 22, mahoragaY - 25, '#f1c40f', 15);
+            }
+        }
+
+        if (mahoragaTimer <= 0) {
+            mahoragaActive = false;
+            createParticles(mahoragaX, mahoragaY, '#ffffff', 40);
+        }
+    }
+
+    cameraX += (player.x - cameraX - canvas.width / 3) * 0.09;
     cameraX = Math.max(0, Math.min(1500, cameraX));
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -770,14 +959,47 @@ function loop() {
     }
 
     PLATFORMS.forEach(p => {
-        ctx.fillStyle = p.type === 'street' ? '#1e1e24' : '#2d3436';
+        ctx.fillStyle = p.type === 'street' ? '#131317' : '#212126';
         ctx.fillRect(p.x - cameraX, p.y, p.w, p.h);
-        ctx.fillStyle = p.type === 'street' ? '#00e5ff' : '#636e72';
+        ctx.fillStyle = p.type === 'street' ? '#ff4757' : '#4b4b54';
         ctx.fillRect(p.x - cameraX, p.y, p.w, 4); 
     });
 
     player.draw();
     activeAis.forEach(ai => ai.draw());
+
+    // Render Mahoraga Canvas Sprite Frame Layout
+    if (mahoragaActive) {
+        // Divine General Body Structure
+        ctx.fillStyle = '#ebdccb'; 
+        ctx.fillRect(mahoragaX - cameraX, mahoragaY, 44, 76);
+        
+        // Sword of Extermination attached arm attachment rendering
+        ctx.fillStyle = '#7f8c8d';
+        let armX = mahoragaDir === 1 ? mahoragaX + 44 - cameraX : mahoragaX - 16 - cameraX;
+        ctx.fillRect(armX, mahoragaY + 24, 16, 12);
+        ctx.fillStyle = '#f5f6fa'; // Glowing white blade point
+        let bladeX = mahoragaDir === 1 ? armX + 16 : armX - 35;
+        ctx.fillRect(bladeX, mahoragaY + 12, mahoragaDir === 1 ? 35 : 35, 32);
+
+        // Render Eight-Handled Adaptation Wheel over shoulder blades head region
+        ctx.save();
+        ctx.translate(mahoragaX + 22 - cameraX, mahoragaY - 20);
+        ctx.rotate(mahoragaWheelAngle);
+        ctx.strokeStyle = '#d2dae2'; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.stroke();
+        // Crosshair spokes lines
+        for(let s=0; s<4; s++) {
+            ctx.rotate(Math.PI / 2);
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 22); ctx.stroke();
+        }
+        ctx.restore();
+
+        // Glistening red eye aura trace
+        ctx.fillStyle = '#ff4d4d';
+        let mEyeX = mahoragaDir === 1 ? mahoragaX + 36 - cameraX : mahoragaX + 6 - cameraX;
+        ctx.fillRect(mEyeX, mahoragaY + 12, 6, 4);
+    }
 
     particles = particles.filter(p => p.life > 0);
     particles.forEach(p => { p.update(); p.draw(); });
@@ -787,39 +1009,26 @@ function loop() {
     document.getElementById('ce-bar').style.width = player.energy + '%';
     document.getElementById('coin-count').innerText = coins;
 
-    if(Math.random() < 0.1) player.energy = Math.min(100, player.energy + 1);
-    activeAis.forEach(ai => { if(Math.random() < 0.1) ai.energy = Math.min(100, ai.energy + 1); });
+    if(Math.random() < 0.12) player.energy = Math.min(100, player.energy + 1);
+    activeAis.forEach(ai => { if(Math.random() < 0.12) ai.energy = Math.min(100, ai.energy + 1); });
 
-    // Mode-Specific Death Assessment Handlers
     if (currentGameMode === '1V1') {
-        // Did the player kill the 1v1 dummy target?
-        if (activeAis[0].health <= 0) {
-            startSukunaThroneCutscene();
-        }
-        
-        // Did the player die?
+        if (activeAis[0].health <= 0) startSukunaThroneCutscene();
         if (player.health <= 0) {
             playerLives1v1--;
             document.getElementById('lives-count').innerText = playerLives1v1;
-            if (playerLives1v1 <= 0) {
-                defeatScreen.style.display = 'block';
-            } else {
-                player.health = 100; player.x = 150; player.y = 300; player.state = 'idle';
-            }
+            if (playerLives1v1 <= 0) { defeatScreen.style.display = 'block'; } 
+            else { player.health = 100; player.x = 150; player.y = 300; player.state = 'idle'; }
         }
     } else {
-        // Battle Royale Loop Auto Respawner Systems
         activeAis.forEach(ai => {
             if (ai.health <= 0) {
                 ai.health = 100; ai.state = 'idle';
-                ai.x = player.x + (Math.random() * 400 + 200) * (Math.random() > 0.5 ? 1 : -1);
+                ai.x = player.x + (Math.random() * 450 + 250) * (Math.random() > 0.5 ? 1 : -1);
                 if (ai.x < 50 || ai.x > 2300) ai.x = 800;
             }
         });
-
-        if (player.health <= 0) {
-            player.health = 100; player.x = 150; player.y = 300; player.state = 'idle';
-        }
+        if (player.health <= 0) { player.health = 100; player.x = 150; player.y = 300; player.state = 'idle'; }
     }
 
     requestAnimationFrame(loop);
