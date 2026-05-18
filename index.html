@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JJS 2D: Shibuya Battle Royale (Class Edition)</title>
+    <title>JJS 2D: Ultimate Jujutsu Battle Royale</title>
     <style>
         body {
             margin: 0; background-color: #08080c; color: #fff;
@@ -67,13 +67,13 @@
             <div class="bar-bg"><div id="ce-bar" class="ce-fill"></div></div>
             <div style="margin-top:5px; font-size:13px;">💰 Coins: <span id="coin-count" style="color:#ffd700;font-weight:bold;">100</span></div>
             <button onclick="toggleModal('char-modal')">Roster Select</button>
-            <button onclick="toggleModal('shop-modal')">Arsenal Shop</button>
+            <button onclick="toggleModal('shop-modal')">Shibuya Vending</button>
         </div>
 
         <div class="hud-panel" style="text-align: right;">
             <div><strong>Shibuya Battle Royale</strong></div>
-            <div style="font-size:12px; color:#aaa; margin-top:5px;">Active Tool: <span id="weapon-display" style="color:#00ffcc;">None</span></div>
-            <div style="font-size:11px; color:#ff7675; margin-top:3px;" id="bf-status">BLACK FLASH WINDOW: CLOSED</div>
+            <div style="font-size:12px; color:#aaa; margin-top:5px;">Weapon Slot: <span id="weapon-display" style="color:#00ffcc;">None</span></div>
+            <div style="font-size:11px; color:#ff7675; margin-top:3px;" id="bf-status">STREAK: 0 | READY</div>
         </div>
     </div>
 
@@ -100,21 +100,19 @@
 
     <div id="shop-modal" class="modal">
         <button class="close-btn" onclick="toggleModal('shop-modal')">X</button>
-        <h3>Cursed Tool Arsenal Store</h3>
+        <h3>Shibuya Vending Machine</h3>
         <div class="grid">
-            <div class="grid-btn" onclick="buyWeapon('Slaughter_Demon', 50)">Slaughter Demon<br><span style="color:#ffd700;">50 Coins</span></div>
-            <div class="grid-btn" onclick="buyWeapon('Playful_Cloud', 150)">Playful Cloud Staff<br><span style="color:#ffd700;">150 Coins</span></div>
-            <div class="grid-btn" onclick="buyWeapon('Inverted_Spear', 300)">Inverted Spear of Heaven<br><span style="color:#ffd700;">300 Coins</span></div>
-            <div class="grid-btn" onclick="buyWeapon('Dragon_Bone', 500)">Dragon Bone Sword<br><span style="color:#ffd700;">500 Coins</span></div>
+            <div class="grid-btn" onclick="buySoda()">Buy Cold Soda<br><span style="color:#2ecc71;">5 Coins (+25 HP)</span></div>
+            <div class="grid-btn" onclick="rollWeapon()">Random Cursed Weapon Gacha<br><span style="color:#e74c3c;">10 Coins</span></div>
         </div>
     </div>
 
     <canvas id="shibuyaCanvas" width="1000" height="500"></canvas>
 
     <div id="controls-legend">
-        Move: <span class="hl">A / D</span> | Jump: <span class="hl">W</span> | Dash: <span class="hl">SHIFT</span> | Wall Run: <span class="hl">Hold A/D into structures while in air</span><br>
-        Basic M1 Attack: <span class="hl">Left Click</span> | Skill 3 (Divergent Windup): <span class="hl">3 Key</span> (Tap again quickly for <span class="hl" style="color:#ff3f34;">BLACK FLASH</span>)<br>
-        Domain Expansion / Ultimate Move (At 100% Blue Energy Bar): <span class="hl">Q Key</span>
+        Move: <span class="hl">A / D</span> | Jump: <span class="hl">W</span> | Dash: <span class="hl">SHIFT</span> | Wall Run: <span class="hl">Hold A/D into walls while airborne</span><br>
+        Basic M1: <span class="hl">Left Click</span> | Reversal Red Special: <span class="hl">R Key</span> (Pulls enemies to you)<br>
+        Divergent Chain: <span class="hl">3 Key</span> (Tap again exactly 1 second later to Black Flash) | Ultimate: <span class="hl">Q Key</span>
     </div>
 
 <script>
@@ -122,28 +120,445 @@ const canvas = document.getElementById('shibuyaCanvas');
 const ctx = canvas.getContext('2d');
 const overlay = document.getElementById('domain-overlay');
 
-// Global Systems
+// Engine Constants
 const GRAVITY = 0.55;
 let cameraX = 0;
 let screenShake = 0;
 let coins = 100;
-let inventory = [];
 let equippedWeapon = 'None';
-let currentPreset = 'mahito';
 let domainActive = false;
 let domainColor = '';
 
-// Fixed Character Database Lookup Matrix
+const WEAPONS_GACHA = ['Slaughter Demon', 'Playful Cloud Staff', 'Inverted Spear of Heaven', 'Dragon Bone Sword'];
+
 const ROSTER = {
-    mahito: { name: "Mahito", color: "#8e44ad", isDomain: true, ultName: "Self-Embodiment of Perfection", dmg: 16 },
-    naoya: { name: "Naoya Zenin", color: "#f1c40f", isDomain: false, ultName: "Projection Sorcery Speed Blitz", dmg: 14 },
-    hakari: { name: "Kinji Hakari", color: "#2ecc71", isDomain: true, ultName: "Idle Death Gamble Jackpot", dmg: 15 },
-    choso: { name: "Choso", color: "#c0392b", isDomain: false, ultName: "Blood Manipulation: Supernova", dmg: 17 },
-    todo: { name: "Aoi Todo", color: "#34495e", isDomain: false, ultName: "Boogie Woogie Positional Swap", dmg: 13 },
-    higuruma: { name: "Hiromi Higuruma", color: "#7f8c8d", isDomain: true, ultName: "Deadly Sentencing Confiscation", dmg: 12 },
-    yuta: { name: "Yuta Okkotsu", color: "#dff9fb", isDomain: true, ultName: "Authentic Mutual Love: Rika Surge", dmg: 18 },
-    nanami: { name: "Kento Nanami", color: "#f39c12", isDomain: false, ultName: "7:3 Ratio Collapse Strike", dmg: 20 },
-    mechamaru: { name: "Mechamaru", color: "#95a5a6", isDomain: false, ultName: "Ultimate Cannon: Albatross Output", dmg: 19 },
-    hanami: { name: "Hanami", color: "#27ae60", isDomain: false, ultName: "Disaster Plant Roots Burst", dmg: 16 },
-    locust: { name: "Locust Guy", color: "#16a085", isDomain: false, ultName: "Hexapod Frenzy", dmg: 14 },
-    yuki: { name: "Yuki Tsukumo", color: "#e67e22", isDomain: false, ultName: "Star Rage Imaginary Density",
+    mahito: { name: "Mahito", color: "#8e44ad", isDomain: true, dmg: 16 },
+    naoya: { name: "Naoya Zenin", color: "#f1c40f", isDomain: false, dmg: 14 },
+    hakari: { name: "Kinji Hakari", color: "#2ecc71", isDomain: true, dmg: 15 },
+    choso: { name: "Choso", color: "#c0392b", isDomain: false, dmg: 17 },
+    todo: { name: "Aoi Todo", color: "#34495e", isDomain: false, dmg: 13 },
+    higuruma: { name: "Hiromi Higuruma", color: "#7f8c8d", isDomain: true, dmg: 12 },
+    yuta: { name: "Yuta Okkotsu", color: "#dff9fb", isDomain: true, dmg: 18 },
+    nanami: { name: "Kento Nanami", color: "#f39c12", isDomain: false, dmg: 20 },
+    mechamaru: { name: "Mechamaru", color: "#95a5a6", isDomain: false, dmg: 19 },
+    hanami: { name: "Hanami", color: "#27ae60", isDomain: false, dmg: 16 },
+    locust: { name: "Locust Guy", color: "#16a085", isDomain: false, dmg: 14 },
+    yuki: { name: "Yuki Tsukumo", color: "#e67e22", isDomain: false, dmg: 24 },
+    haruta: { name: "Haruta Shigemo", color: "#e84393", isDomain: false, dmg: 11 },
+    meimei: { name: "Mei Mei", color: "#00a8ff", isDomain: false, dmg: 21 }
+};
+
+const PLATFORMS = [
+    { x: 0, y: 450, w: 2500, h: 50, type: 'street' },        
+    { x: 300, y: 330, w: 400, h: 20, type: 'subway_deck' },  
+    { x: 850, y: 220, w: 350, h: 20, type: 'subway_deck' },  
+    { x: 1300, y: 310, w: 500, h: 20, type: 'stairwell' }   
+];
+
+class Actor {
+    constructor(x, y, color, isAi = false, charType = 'mahito') {
+        this.x = x; this.y = y; this.vx = 0; this.vy = 0;
+        this.width = 30; this.height = 60;
+        this.color = color; this.isAi = isAi; this.charType = charType;
+        this.health = 100; this.energy = 20;
+        this.direction = 1; this.state = 'idle'; this.stateTimer = 0;
+        this.isGrounded = false;
+
+        // Custom Timing Black Flash Variables
+        this.lastDivergentTime = 0;
+        this.bfStreak = 0;
+        this.divergentCooldown = false;
+    }
+
+    update() {
+        if (!this.isGrounded) this.vy += GRAVITY;
+        this.vx *= 0.82;
+        this.x += this.vx; this.y += this.vy;
+        this.isGrounded = false;
+
+        PLATFORMS.forEach(plat => {
+            if (this.x + this.width > plat.x && this.x < plat.x + plat.w &&
+                this.y + this.height >= plat.y && this.y + this.height - this.vy <= plat.y + 10) {
+                this.y = plat.y - this.height;
+                this.vy = 0;
+                this.isGrounded = true;
+            }
+        });
+
+        if (this.x < 0) this.x = 0;
+        if (this.x > 2400) this.x = 2400;
+
+        if (this.stateTimer > 0) {
+            this.stateTimer--;
+            if (this.stateTimer === 0) this.state = 'idle';
+        }
+
+        if (this.isAi && this.state === 'idle' && this.health > 0) {
+            this.processAiLogic();
+        }
+    }
+
+    processAiLogic() {
+        let potentialTargets = [];
+        if (player.health > 0) potentialTargets.push(player);
+        activeAis.forEach(ai => { if (ai !== this && ai.health > 0) potentialTargets.push(ai); });
+        if (potentialTargets.length === 0) return;
+
+        let closestTarget = null;
+        let shortestDistance = Infinity;
+        potentialTargets.forEach(target => {
+            let distance = Math.abs(target.x - this.x);
+            if (distance < shortestDistance) {
+                shortestDistance = distance;
+                closestTarget = target;
+            }
+        });
+
+        if (!closestTarget) return;
+        let dist = closestTarget.x - this.x;
+        this.direction = dist > 0 ? 1 : -1;
+
+        if (Math.abs(dist) > 55) {
+            this.vx = this.direction * 3.2;
+            if (Math.random() < 0.015 && this.isGrounded) {
+                this.vy = -10;
+                this.isGrounded = false;
+            }
+        } else {
+            let decision = Math.random();
+            if (decision < 0.05) this.attackM1();
+            else if (decision < 0.06) this.executeRSpecial();
+        }
+    }
+
+    attackM1() {
+        if (this.state !== 'idle') return;
+        this.state = 'attacking'; this.stateTimer = 15;
+        let range = 50;
+        let damage = ROSTER[this.charType]?.dmg || 15;
+
+        if (!this.isAi) {
+            if (equippedWeapon === 'Slaughter Demon') damage += 5;
+            if (equippedWeapon === 'Playful Cloud Staff') { damage += 12; range = 70; }
+            if (equippedWeapon === 'Inverted Spear of Heaven') damage += 16;
+            if (equippedWeapon === 'Dragon Bone Sword') { damage += 22; range = 85; }
+        }
+
+        let hX = this.direction === 1 ? this.x + this.width : this.x - range;
+        executeHitboxSweep(this, hX, this.y + 10, range, 40, damage, this.direction * 10, -3, false);
+    }
+
+    // New R-Special Hook Mechanism
+    executeRSpecial() {
+        if (this.state !== 'idle') return;
+        this.state = 'attacking'; this.stateTimer = 25;
+        let range = 200; // Large grab area
+        let hX = this.direction === 1 ? this.x + this.width : this.x - range;
+        
+        // Sweep hitboxes checking specifically for pull conditions
+        executeHitboxSweep(this, hX, this.y - 10, range, 70, 10, 0, 0, true);
+        createParticles(this.x + (this.direction * 60), this.y + 20, '#ff3838', 15);
+    }
+
+    // New 1-Second Rule Chaining System
+    handleDivergentFistInput() {
+        if (this.divergentCooldown) return;
+        
+        let now = performance.now();
+        let timeDiff = (now - this.lastDivergentTime) / 1000; // Convert to seconds
+        this.lastDivergentTime = now;
+
+        if (this.state === 'idle') {
+            // First strike initial setups
+            this.state = 'attacking'; this.stateTimer = 15;
+            let range = 60;
+            let hX = this.direction === 1 ? this.x + this.width : this.x - range;
+            executeHitboxSweep(this, hX, this.y + 10, range, 45, 12, this.direction * 5, -2, false);
+            createParticles(hX + range/2, this.y + 20, '#00bcff', 8);
+            
+            if (!this.isAi) document.getElementById('bf-status').innerText = `CHAIN STATUS: PRIMED...`;
+            return;
+        }
+
+        // Evaluate chain window constraints
+        if (timeDiff >= 0.8 && timeDiff <= 1.2) {
+            this.bfStreak++;
+            screenShake = 15;
+            
+            if (this.bfStreak >= 4) {
+                // Trigger 4th Super Black Flash Collapse Event
+                this.triggerSuperBlackFlash();
+            } else {
+                // Standard Link Flash Trigger Sequence
+                this.state = 'attacking'; this.stateTimer = 15;
+                let range = 75;
+                let hX = this.direction === 1 ? this.x + this.width : this.x - range;
+                executeHitboxSweep(this, hX, this.y, range, 50, 30, this.direction * 20, -8, false);
+                createParticles(hX + range/2, this.y + 20, '#ff0044', 25);
+                
+                if (!this.isAi) document.getElementById('bf-status').innerText = `STREAK: ${this.bfStreak} | BLACK FLASH!`;
+            }
+        } else {
+            // Missed execution parameters trigger penalty structural lockout
+            this.forceDivergentCooldown();
+        }
+    }
+
+    triggerSuperBlackFlash() {
+        this.bfStreak = 0;
+        this.state = 'attacking'; this.stateTimer = 35;
+        screenShake = 40;
+        
+        let range = 180;
+        let hX = this.direction === 1 ? this.x + this.width : this.x - range;
+        executeHitboxSweep(this, hX, this.y - 30, range, 100, 65, this.direction * 45, -15, false);
+        
+        createParticles(this.x, this.y, '#ff003c', 60);
+        createParticles(this.x, this.y, '#000000', 40);
+        
+        this.divergentCooldown = true;
+        if (!this.isAi) document.getElementById('bf-status').innerText = `SUPER FLASH OVERHEAT!`;
+        
+        setTimeout(() => {
+            this.divergentCooldown = false;
+            if (!this.isAi) document.getElementById('bf-status').innerText = `STREAK: 0 | READY`;
+        }, 5000); // 5 second strategic penalty block
+    }
+
+    forceDivergentCooldown() {
+        this.bfStreak = 0;
+        this.divergentCooldown = true;
+        if (!this.isAi) document.getElementById('bf-status').innerText = `MISSED WINDOW! COOLDOWN`;
+        
+        setTimeout(() => {
+            this.divergentCooldown = false;
+            if (!this.isAi) document.getElementById('bf-status').innerText = `STREAK: 0 | READY`;
+        }, 2000);
+    }
+
+    executeUltimateOrDomain() {
+        if (this.energy < 100) return;
+        this.energy = 0;
+        let data = ROSTER[this.charType];
+        screenShake = 25;
+
+        if (data.isDomain) {
+            domainActive = true; domainColor = this.color;
+            overlay.style.display = 'block';
+            overlay.style.background = `radial-gradient(circle, transparent 30%, ${this.color} 90%)`;
+            executeHitboxSweep(this, this.x - 300, this.y - 200, 700, 500, 45, this.direction * 5, -8, false);
+            setTimeout(() => { domainActive = false; overlay.style.display = 'none'; }, 4000);
+        } else {
+            let range = 250;
+            let hX = this.direction === 1 ? this.x + this.width : this.x - range;
+            executeHitboxSweep(this, hX, this.y - 50, range, 120, 50, this.direction * 32, -11, false);
+            createParticles(this.x + (this.direction * 100), this.y, this.color, 45);
+        }
+    }
+
+    damage(amt, kx, ky) {
+        this.health = Math.max(0, this.health - amt);
+        this.vx = kx; this.vy = ky;
+        this.state = 'hitstun'; this.stateTimer = 22;
+        if (!this.isAi) this.energy = Math.min(100, this.energy + amt * 0.7);
+    }
+
+    draw() {
+        if (this.health <= 0) return; 
+        ctx.fillStyle = this.state === 'hitstun' ? '#7f8c8d' : this.color;
+        ctx.fillRect(this.x - cameraX, this.y, this.width, this.height);
+
+        ctx.fillStyle = '#fff';
+        let eyeX = this.direction === 1 ? this.x + this.width - 6 : this.x + 2;
+        ctx.fillRect(eyeX - cameraX, this.y + 12, 4, 4);
+    }
+}
+
+class Particle {
+    constructor(x, y, vx, vy, color) {
+        this.x = x; this.y = y; this.vx = vx; this.vy = vy;
+        this.color = color; this.life = Math.random()*20 + 15; this.maxLife = this.life;
+    }
+    update() { this.x += this.vx; this.y += this.vy; this.life--; }
+    draw() {
+        ctx.fillStyle = this.color;
+        ctx.globalAlpha = this.life / this.maxLife;
+        ctx.fillRect(this.x - cameraX, this.y, 4, 4);
+        ctx.globalAlpha = 1.0;
+    }
+}
+
+// Global System Instantiations
+const player = new Actor(150, 300, '#8e44ad', false, 'mahito');
+let activeAis = [];
+let particles = [];
+const keys = {};
+
+function spawnThreatAis() {
+    activeAis = [
+        new Actor(600, 200, '#f1c40f', true, 'naoya'),
+        new Actor(950, 100, '#2ecc71', true, 'hakari'),
+        new Actor(1400, 200, '#c0392b', true, 'choso'),
+        new Actor(1800, 300, '#34495e', true, 'todo')
+    ];
+}
+
+function createParticles(x, y, color, count) {
+    for(let i=0; i<count; i++) {
+        particles.push(new Particle(x, y, (Math.random()-0.5)*14, (Math.random()-0.5)*14, color));
+    }
+}
+
+function executeHitboxSweep(attacker, hx, hy, hw, hh, dmg, kx, ky, isPullMove = false) {
+    let targets = [player, ...activeAis];
+
+    if (!attacker.isAi) {
+        ctx.fillStyle = isPullMove ? 'rgba(0, 229, 255, 0.3)' : 'rgba(255, 0, 52, 0.25)';
+        ctx.fillRect(hx - cameraX, hy, hw, hh);
+    }
+
+    targets.forEach(t => {
+        if (t && t.health > 0 && t !== attacker &&
+            hx < t.x + t.width && hx + hw > t.x &&
+            hy < t.y + t.height && hy + hh > t.y) {
+            
+            if (isPullMove) {
+                // Reversal Red Pull Logic Pathway
+                t.x = attacker.direction === 1 ? attacker.x + attacker.width + 10 : attacker.x - t.width - 10;
+                t.y = attacker.y;
+                
+                // Triggers structural counter automated landing hit + automated smash flash effect
+                setTimeout(() => {
+                    t.damage(22, attacker.direction * 15, -6);
+                    createParticles(t.x, t.y + 20, '#ff003c', 20);
+                    screenShake = 12;
+                }, 100);
+            } else {
+                t.damage(dmg, kx, ky);
+                createParticles(t.x + 15, t.y + 30, '#fff', 5);
+            }
+            
+            if (!attacker.isAi) coins += 8; 
+        }
+    });
+}
+
+function toggleModal(id) {
+    let el = document.getElementById(id);
+    el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+}
+
+function selectCharacter(key) {
+    if (!ROSTER[key]) return;
+    player.charType = key;
+    player.color = ROSTER[key].color;
+    player.health = 100;
+    document.getElementById('char-display').innerText = "CHARACTER: " + ROSTER[key].name;
+    toggleModal('char-modal');
+    createParticles(player.x, player.y + 20, player.color, 20);
+}
+
+// Revamped Vending Machine Routines
+function buySoda() {
+    if (coins >= 5) {
+        coins -= 5;
+        player.health = Math.min(100, player.health + 25);
+        createParticles(player.x + 15, player.y + 20, '#2ecc71', 15);
+        toggleModal('shop-modal');
+    }
+}
+
+function rollWeapon() {
+    if (coins >= 10) {
+        coins -= 10;
+        let randomWeapon = WEAPONS_GACHA[Math.floor(Math.random() * WEAPONS_GACHA.length)];
+        equippedWeapon = randomWeapon;
+        document.getElementById('weapon-display').innerText = randomWeapon;
+        createParticles(player.x + 15, player.y + 20, '#ffd700', 25);
+        toggleModal('shop-modal');
+    }
+}
+
+// Controller Interceptors
+window.addEventListener('keydown', e => {
+    keys[e.key] = true;
+    if (player.health <= 0 || player.state === 'hitstun') return;
+    if (e.key === '3') player.handleDivergentFistInput();
+    if (e.key.toLowerCase() === 'r') player.executeRSpecial();
+    if (e.key.toLowerCase() === 'q') player.executeUltimateOrDomain();
+    if (e.key === 'Shift') { 
+        player.vx = player.direction * 16;
+        createParticles(player.x, player.y + 30, 'rgba(255,255,255,0.3)', 4);
+    }
+});
+window.addEventListener('keyup', e => { keys[e.key] = false; });
+canvas.addEventListener('mousedown', () => { if(player.state === 'idle' && player.health > 0) player.attackM1(); });
+
+// Main Engine Game Loops Routine Framework
+function loop() {
+    if (player.state === 'idle' && player.health > 0) {
+        if (keys['a'] || keys['A']) { player.vx = -5.2; player.direction = -1; }
+        if (keys['d'] || keys['D']) { player.vx = 5.2; player.direction = 1; }
+        if ((keys['w'] || keys['W']) && player.isGrounded) { player.vy = -12; player.isGrounded = false; }
+        
+        if (!player.isGrounded && Math.abs(player.vx) > 1) {
+            PLATFORMS.forEach(p => {
+                if (player.x + player.width + 4 >= p.x && player.x - 4 <= p.x + p.w && player.y > p.y - 40) {
+                    if (keys['w'] || keys['W']) { player.vy = -5.5; } 
+                }
+            });
+        }
+    }
+
+    player.update();
+    activeAis.forEach(ai => ai.update());
+
+    cameraX += (player.x - cameraX - canvas.width / 3) * 0.08;
+    cameraX = Math.max(0, Math.min(1500, cameraX));
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    if (screenShake > 0) {
+        ctx.translate((Math.random()-0.5)*screenShake, (Math.random()-0.5)*screenShake);
+        screenShake *= 0.88;
+    }
+
+    PLATFORMS.forEach(p => {
+        ctx.fillStyle = p.type === 'street' ? '#1e1e24' : '#2d3436';
+        ctx.fillRect(p.x - cameraX, p.y, p.w, p.h);
+        ctx.fillStyle = p.type === 'street' ? '#00e5ff' : '#636e72';
+        ctx.fillRect(p.x - cameraX, p.y, p.w, 4); 
+    });
+
+    player.draw();
+    activeAis.forEach(ai => ai.draw());
+
+    particles = particles.filter(p => p.life > 0);
+    particles.forEach(p => { p.update(); p.draw(); });
+    ctx.restore();
+
+    // Fast Refresh UI Layout Engines
+    document.getElementById('hp-bar').style.width = player.health + '%';
+    document.getElementById('ce-bar').style.width = player.energy + '%';
+    document.getElementById('coin-count').innerText = coins;
+
+    activeAis.forEach(ai => {
+        if (ai.health <= 0) {
+            ai.health = 100; ai.state = 'idle';
+            ai.x = player.x + (Math.random() * 400 + 200) * (Math.random() > 0.5 ? 1 : -1);
+            if (ai.x < 50 || ai.x > 2300) ai.x = 800;
+        }
+    });
+
+    if (player.health <= 0) {
+        player.health = 100; player.x = 150; player.y = 300; player.state = 'idle';
+    }
+
+    requestAnimationFrame(loop);
+}
+
+spawnThreatAis();
+loop();
+</script>
+</body>
+</html>
