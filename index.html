@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JJS 2D: Shibuya Incident Sandbox</title>
+    <title>JJS 2D: Shibuya Incident Class Edition</title>
     <style>
         body {
             margin: 0; background-color: #08080c; color: #fff;
@@ -112,9 +112,9 @@
     <canvas id="shibuyaCanvas" width="1000" height="500"></canvas>
 
     <div id="controls-legend">
-        Move: <span class="hl">A / D</span> | Jump: <span class="hl">W</span> | Dash: <span class="hl">SHIFT</span> | Wall Run: <span class="hl">Hold A/D into structural walls while airborne</span><br>
-        Basic M1 Attack: <span class="hl">Left Click</span> | Skill 3 (Divergent Fist Setup): <span class="hl">3 Key</span> (Tap again on flash for <span class="hl" style="color:#ff3f34;">BLACK FLASH</span>)<br>
-        Unleash Domain Expansion / Ultimate Move (At 100% Spark Energy): <span class="hl">Q Key</span>
+        Move: <span class="hl">A / D</span> | Jump: <span class="hl">W</span> | Dash: <span class="hl">SHIFT</span> | Wall Run: <span class="hl">Hold A/D into structures while in air</span><br>
+        Basic M1 Attack: <span class="hl">Left Click</span> | Skill 3 (Divergent Windup): <span class="hl">3 Key</span> (Tap again quickly for <span class="hl" style="color:#ff3f34;">BLACK FLASH</span>)<br>
+        Domain Expansion / Ultimate Move (At 100% Blue Energy Bar): <span class="hl">Q Key</span>
     </div>
 
 <script>
@@ -133,7 +133,7 @@ let currentPreset = 'mahito';
 let domainActive = false;
 let domainColor = '';
 
-// Roster Database Configuration
+// Fixed Character Database Lookup Matrix
 const ROSTER = {
     mahito: { name: "Mahito", color: "#8e44ad", isDomain: true, ultName: "Self-Embodiment of Perfection", dmg: 16 },
     naoya: { name: "Naoya Zenin", color: "#f1c40f", isDomain: false, ultName: "Projection Sorcery Speed Blitz", dmg: 14 },
@@ -151,27 +151,373 @@ const ROSTER = {
     meimei: { name: "Mei Mei", color: "#00a8ff", isDomain: false, ultName: "Bird Strike Kamikaze Crash", dmg: 21 }
 };
 
-// Map Blueprint: Shibuya Station Hub
+// Map Boundaries Setup
 const PLATFORMS = [
-    { x: 0, y: 450, w: 2500, h: 50, type: 'street' },        // Main Street Floor
-    { x: 300, y: 330, w: 400, h: 20, type: 'subway_deck' },  // Upper Station Overpass
-    { x: 850, y: 220, w: 350, h: 20, type: 'subway_deck' },  // Elevated Scaffold
-    { x: 1300, y: 310, w: 500, h: 20, type: 'stairwell' }   // Lower Mezzanine Platform
+    { x: 0, y: 450, w: 2500, h: 50, type: 'street' },        
+    { x: 300, y: 330, w: 400, h: 20, type: 'subway_deck' },  
+    { x: 850, y: 220, w: 350, h: 20, type: 'subway_deck' },  
+    { x: 1300, y: 310, w: 500, h: 20, type: 'stairwell' }   
 ];
 
 class Actor {
-    constructor(x, y, color, isAi = false, charType = 'yuji') {
+    constructor(x, y, color, isAi = false, charType = 'mahito') {
         this.x = x; this.y = y; this.vx = 0; this.vy = 0;
         this.width = 30; this.height = 60;
         this.color = color; this.isAi = isAi; this.charType = charType;
         this.health = 100; this.maxHealth = 100; this.energy = 20;
         this.direction = 1; this.state = 'idle'; this.stateTimer = 0;
-        this.isGrounded = false; this.combo = 0;
+        this.isGrounded = false;
         
-        // Timing-based Black Flash mechanics variables
         this.bfWindowActive = false;
         this.hasBlackFlashed = false;
     }
 
     update() {
-        if (!this.
+        if (!this.isGrounded) this.vy += GRAVITY;
+        this.vx *= 0.82;
+        this.x += this.vx; this.y += this.vy;
+        this.isGrounded = false;
+
+        // Platform Collision Engine Updates
+        PLATFORMS.forEach(plat => {
+            if (this.x + this.width > plat.x && this.x < plat.x + plat.w &&
+                this.y + this.height >= plat.y && this.y + this.height - this.vy <= plat.y + 10) {
+                this.y = plat.y - this.height;
+                this.vy = 0;
+                this.isGrounded = true;
+            }
+        });
+
+        // Soft Borders Lock
+        if (this.x < 0) this.x = 0;
+        if (this.x > 2400) this.x = 2400;
+
+        // State machine processing safely
+        if (this.stateTimer > 0) {
+            this.stateTimer--;
+            if (this.stateTimer === 0) {
+                if (this.state === 'windup' && !this.hasBlackFlashed) {
+                    this.executeStandardDivergent();
+                } else {
+                    this.state = 'idle';
+                }
+                this.bfWindowActive = false;
+            }
+        }
+
+        // Cleaned up AI Processing logic
+        if (this.isAi && this.state === 'idle' && this.health > 0) {
+            this.processAiLogic();
+        }
+    }
+
+    processAiLogic() {
+        let dist = player.x - this.x;
+        this.direction = dist > 0 ? 1 : -1;
+
+        if (Math.abs(dist) > 55) {
+            this.vx = this.direction * 3.2;
+            if (Math.random() < 0.015 && this.isGrounded) {
+                this.vy = -10;
+                this.isGrounded = false;
+            }
+        } else {
+            if (Math.random() < 0.05) this.attackM1();
+        }
+    }
+
+    attackM1() {
+        if (this.state !== 'idle') return;
+        this.state = 'attacking'; this.stateTimer = 15;
+        let range = 50;
+        let damage = ROSTER[this.charType]?.dmg || 15;
+
+        if (!this.isAi) {
+            if (equippedWeapon === 'Slaughter_Demon') damage += 5;
+            if (equippedWeapon === 'Playful_Cloud') { damage += 12; range = 70; }
+            if (equippedWeapon === 'Inverted_Spear') damage += 16;
+            if (equippedWeapon === 'Dragon_Bone') { damage += 22; range = 85; }
+        }
+
+        let hX = this.direction === 1 ? this.x + this.width : this.x - range;
+        executeHitboxSweep(this, hX, this.y + 10, range, 40, damage, this.direction * 10, -3);
+    }
+
+    initiateDivergentSkill() {
+        if (this.state !== 'idle') {
+            if (this.state === 'windup' && this.bfWindowActive && !this.hasBlackFlashed) {
+                this.triggerBlackFlashSuccess();
+            }
+            return;
+        }
+        this.state = 'windup';
+        this.stateTimer = 22;
+        this.hasBlackFlashed = false;
+        this.bfWindowActive = false;
+
+        if (!this.isAi) document.getElementById('bf-status').innerText = "BLACK FLASH WINDOW: CRITICAL OPEN!";
+
+        setTimeout(() => {
+            if (this.state === 'windup') this.bfWindowActive = true;
+        }, 180); 
+    }
+
+    triggerBlackFlashSuccess() {
+        this.hasBlackFlashed = true;
+        this.state = 'attacking';
+        this.stateTimer = 20;
+        this.bfWindowActive = false;
+        screenShake = 22;
+
+        if (!this.isAi) {
+            document.getElementById('bf-status').innerText = "BLACK FLASH SPARK HIT!";
+            coins += 40;
+        }
+
+        let range = 80;
+        let hX = this.direction === 1 ? this.x + this.width : this.x - range;
+        
+        executeHitboxSweep(this, hX, this.y, range, 60, 38, this.direction * 25, -10);
+        createParticles(hX + range/2, this.y + 20, '#ff003c', 35);
+        createParticles(hX + range/2, this.y + 20, '#000000', 20);
+    }
+
+    executeStandardDivergent() {
+        this.state = 'attacking'; this.stateTimer = 15;
+        let range = 60;
+        let hX = this.direction === 1 ? this.x + this.width : this.x - range;
+        executeHitboxSweep(this, hX, this.y + 10, range, 45, 16, this.direction * 12, -4);
+        createParticles(hX + range/2, this.y + 20, '#00bcff', 10);
+    }
+
+    executeUltimateOrDomain() {
+        if (this.energy < 100) return;
+        this.energy = 0;
+        let data = ROSTER[this.charType];
+        
+        screenShake = 25;
+        createParticles(this.x, this.y + 20, this.color, 40);
+
+        if (data.isDomain) {
+            domainActive = true;
+            domainColor = this.color;
+            overlay.style.display = 'block';
+            overlay.style.background = `radial-gradient(circle, transparent 30%, ${this.color} 90%)`;
+            
+            executeHitboxSweep(this, this.x - 300, this.y - 200, 700, 500, 45, this.direction * 5, -8);
+            
+            setTimeout(() => {
+                domainActive = false;
+                overlay.style.display = 'none';
+            }, 4000);
+        } else {
+            let range = 250;
+            let hX = this.direction === 1 ? this.x + this.width : this.x - range;
+            executeHitboxSweep(this, hX, this.y - 50, range, 120, 50, this.direction * 32, -11);
+            createParticles(this.x + (this.direction * 100), this.y, this.color, 45);
+        }
+    }
+
+    damage(amt, kx, ky) {
+        this.health = Math.max(0, this.health - amt);
+        this.vx = kx; this.vy = ky;
+        this.state = 'hitstun'; this.stateTimer = 22;
+        if (!this.isAi) this.energy = Math.min(100, this.energy + amt * 0.7);
+    }
+
+    draw() {
+        if (this.health <= 0) return; // Prevent dead renderings
+        ctx.fillStyle = this.state === 'hitstun' ? '#7f8c8d' : this.color;
+        ctx.fillRect(this.x - cameraX, this.y, this.width, this.height);
+
+        ctx.fillStyle = '#fff';
+        let eyeX = this.direction === 1 ? this.x + this.width - 6 : this.x + 2;
+        ctx.fillRect(eyeX - cameraX, this.y + 12, 4, 4);
+
+        if (this.bfWindowActive) {
+            ctx.strokeStyle = '#ff0055'; ctx.lineWidth = 2;
+            ctx.strokeRect(this.x - 4 - cameraX, this.y - 4, this.width + 8, this.height + 8);
+        }
+    }
+}
+
+class Particle {
+    constructor(x, y, vx, vy, color) {
+        this.x = x; this.y = y; this.vx = vx; this.vy = vy;
+        this.color = color; this.life = Math.random()*20 + 15; this.maxLife = this.life;
+    }
+    update() { this.x += this.vx; this.y += this.vy; this.life--; }
+    draw() {
+        ctx.fillStyle = this.color;
+        ctx.globalAlpha = this.life / this.maxLife;
+        ctx.fillRect(this.x - cameraX, this.y, 4, 4);
+        ctx.globalAlpha = 1.0;
+    }
+}
+
+// Initialization Framework
+const player = new Actor(150, 300, '#8e44ad', false, 'mahito');
+let activeAis = [];
+let particles = [];
+const keys = {};
+
+function spawnThreatAis() {
+    activeAis = [
+        new Actor(600, 200, '#f1c40f', true, 'naoya'),
+        new Actor(950, 100, '#2ecc71', true, 'hakari'),
+        new Actor(1400, 200, '#c0392b', true, 'choso'),
+        new Actor(1800, 300, '#34495e', true, 'todo')
+    ];
+}
+
+function createParticles(x, y, color, count) {
+    for(let i=0; i<count; i++) {
+        particles.push(new Particle(x, y, (Math.random()-0.5)*14, (Math.random()-0.5)*14, color));
+    }
+}
+
+function executeHitboxSweep(attacker, hx, hy, hw, hh, dmg, kx, ky) {
+    let targets = [...activeAis];
+    if (attacker.isAi) {
+        targets = [player];
+    } else {
+        ctx.fillStyle = 'rgba(255, 0, 52, 0.25)';
+        ctx.fillRect(hx - cameraX, hy, hw, hh);
+    }
+
+    targets.forEach(t => {
+        if (t && t.health > 0 && t !== attacker &&
+            hx < t.x + t.width && hx + hw > t.x &&
+            hy < t.y + t.height && hy + hh > t.y) {
+            t.damage(dmg, kx, ky);
+            createParticles(t.x + 15, t.y + 30, '#fff', 5);
+            if (!attacker.isAi) coins += 8; 
+        }
+    });
+}
+
+function toggleModal(id) {
+    let el = document.getElementById(id);
+    el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+}
+
+function selectCharacter(key) {
+    if (!ROSTER[key]) return;
+    currentPreset = key;
+    player.charType = key;
+    player.color = ROSTER[key].color;
+    player.health = 100;
+    document.getElementById('char-display').innerText = "CHARACTER: " + ROSTER[key].name;
+    toggleModal('char-modal');
+    createParticles(player.x, player.y + 20, player.color, 20);
+}
+
+function buyWeapon(name, cost) {
+    if (coins >= cost && !inventory.includes(name)) {
+        coins -= cost; inventory.push(name); equippedWeapon = name;
+        document.getElementById('weapon-display').innerText = name.replace('_', ' ');
+        toggleModal('shop-modal');
+    } else if (inventory.includes(name)) {
+        equippedWeapon = name;
+        document.getElementById('weapon-display').innerText = name.replace('_', ' ');
+        toggleModal('shop-modal');
+    }
+}
+
+// Controller Interceptors
+window.addEventListener('keydown', e => {
+    keys[e.key] = true;
+    if (player.state === 'hitstun') return;
+    if (e.key === '3') player.initiateDivergentSkill();
+    if (e.key.toLowerCase() === 'q') player.executeUltimateOrDomain();
+    if (e.key === 'Shift') { 
+        player.vx = player.direction * 16;
+        createParticles(player.x, player.y + 30, 'rgba(255,255,255,0.3)', 4);
+    }
+});
+window.addEventListener('keyup', e => { keys[e.key] = false; });
+canvas.addEventListener('mousedown', () => { if(player.state === 'idle') player.attackM1(); });
+
+// Engine Frame Routine Loop
+function loop() {
+    if (player.state === 'idle') {
+        if (keys['a'] || keys['A']) { player.vx = -5.2; player.direction = -1; }
+        if (keys['d'] || keys['D']) { player.vx = 5.2; player.direction = 1; }
+        if ((keys['w'] || keys['W']) && player.isGrounded) { player.vy = -12; player.isGrounded = false; }
+        
+        // Parkour Wall Mechanics Handling safely
+        if (!player.isGrounded && Math.abs(player.vx) > 1) {
+            PLATFORMS.forEach(p => {
+                if (player.x + player.width + 4 >= p.x && player.x - 4 <= p.x + p.w && player.y > p.y - 40) {
+                    if (keys['w'] || keys['W']) { player.vy = -5.5; } 
+                }
+            });
+        }
+    }
+
+    player.update();
+    activeAis.forEach(ai => ai.update());
+
+    // Clean Screen Mapping Tracking
+    cameraX += (player.x - cameraX - canvas.width / 3) * 0.08;
+    cameraX = Math.max(0, Math.min(1500, cameraX));
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    if (screenShake > 0) {
+        ctx.translate((Math.random()-0.5)*screenShake, (Math.random()-0.5)*screenShake);
+        screenShake *= 0.88;
+    }
+
+    // Render Shibuya Maps
+    PLATFORMS.forEach(p => {
+        ctx.fillStyle = p.type === 'street' ? '#1e1e24' : '#2d3436';
+        ctx.fillRect(p.x - cameraX, p.y, p.w, p.h);
+        ctx.fillStyle = p.type === 'street' ? '#00e5ff' : '#636e72';
+        ctx.fillRect(p.x - cameraX, p.y, p.w, 4); 
+    });
+
+    // Render Actors Safely
+    player.draw();
+    activeAis.forEach(ai => { ai.draw(); });
+
+    // Handle Active Particles loops
+    particles = particles.filter(p => p.life > 0);
+    particles.forEach(p => { p.update(); p.draw(); });
+
+    ctx.restore();
+
+    // Refresh UI elements
+    document.getElementById('hp-bar').style.width = player.health + '%';
+    document.getElementById('ce-bar').style.width = player.energy + '%';
+    document.getElementById('coin-count').innerText = coins;
+    if (player.state !== 'windup') document.getElementById('bf-status').innerText = "BLACK FLASH WINDOW: CLOSED";
+
+    // Continuous AI Respawn Routine System
+    activeAis.forEach(ai => {
+        if (ai.health <= 0) {
+            ai.health = 100; 
+            ai.state = 'idle';
+            ai.x = player.x + (Math.random() * 400 + 200) * (Math.random() > 0.5 ? 1 : -1);
+            if (ai.x < 50 || ai.x > 2300) ai.x = 800;
+        }
+    });
+
+    // Automatic Player Defeated Heal System to keep the game endless and fun!
+    if (player.health <= 0) {
+        player.health = 100;
+        player.x = 150;
+        player.y = 300;
+        player.state = 'idle';
+    }
+
+    requestAnimationFrame(loop);
+}
+
+// Run Environment Boot
+spawnThreatAis();
+loop();
+</script>
+</body>
+</html>
