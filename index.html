@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JJS 2D</title>
+    <title>JJS 2D: Unlimited Shibuya Revamp (Enhanced Ability Engine)</title>
     <style>
         body {
             margin: 0; background-color: #040406; color: #fff;
@@ -31,7 +31,7 @@
         }
         button:hover { background: #3d414a; border-color: #ff4757; }
         
-        .mode-btn { background: #ff4757; border: 1px solid #ff6b81; font-size: 14px; padding: 8px 16px; border-radius: 6px; box-shadow: 0 0 15px rgba(255,71,87,0.5); }
+        .mode-btn { background: #ff4757; border: 1px solid #ff6b81; font-size: 14px; padding: 8px 16px; border-radius: 6px; box-shadow: 0 0 15px rgba(255,71,87,0.5); pointer-events: auto; }
         .mode-btn:hover { background: #ff6b81; transform: scale(1.05); }
 
         .tutorial-btn { background: #00d2d3; border: 1px solid #00a8ff; font-size: 13px; padding: 6px 14px; border-radius: 4px; box-shadow: 0 0 10px rgba(0,210,211,0.4); }
@@ -670,7 +670,8 @@ class Actor {
 
         if (data.isDomain) {
             if (domainActive || slashCutsceneActive) {
-                initiateDomainClash(currentDomainOwner ? currentDomainOwner : (activeAis[0] || this), this);
+                let opponent = activeAis.find(ai => ai !== this && ai.health > 0) || player;
+                initiateDomainClash(opponent, this);
             } else {
                 currentDomainOwner = this;
                 domainActive = true;
